@@ -6,6 +6,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     var mentions = [];
     var blockedUsers = [];
     var speakers = [];
+    var userIDs = [];
     var officialUser;
     var inApprovalMode = false;
 
@@ -19,6 +20,8 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     var logUpdatesFile;
     var logTweetsCount = 0;
     var logUpdatesCount = 0;
+
+    var stream;
 
     function tweetType(tweet) {
         if (tweet.user.screen_name === officialUser) {
@@ -501,11 +504,14 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
                         screen_name: officialUser,
                         operation: "add"
                     });
+                    getUserIDs(function() {
+                        callback();
+                    });
                 } catch (err) {
                     console.log("Error parsing event config file: " + err);
+                    callback();
                 }
             }
-            callback();
         });
     }
 
@@ -545,6 +551,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     }
 
     function getSpeakers() {
+        createStream();
         return speakers;
     }
 
@@ -579,4 +586,69 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         logUpdatesCount += updates.length;
     }
 
-};
+    function createStream() {
+        var words = getTrackedWords();
+        var users = getTrackedUsers();
+        stream = client.stream("statuses/filter", {
+            track: words,
+            follow: users
+        });
+        stream.on("data", function(event) {
+            if (event.user) {
+                console.log(event);
+            }
+        });
+        stream.on("error", function(error) {
+            console.log(error);
+        });
+    }
+
+    function getTrackedWords() {
+        var query = hashtags.map(function(hash) {
+            if (hash.charAt(0) === "#") {
+                return hash.substr(1);
+            }
+            return hash;
+        }).join(", ");
+        return query;
+    }
+
+    function getTrackedUsers() {
+        var all = userIDs;
+        var query = all.join(", ");
+        return query;
+    }
+
+    function getUserIDs(done) {
+        var all = speakers.concat(mentions);
+        var completed = 0;
+        for (var i = 0; i < all.length; i++) {
+            var user = all[i];
+            getUserID(user, function(err, id) {
+                if (!err) {
+                    userIDs.push(id);
+                }
+                completed++;
+                if (completed === all.length) {
+                    done();
+                }
+            });
+        }
+    }
+
+    function getUserID(user, cb) {
+        client.get("users/lookup.json", {
+            screen_name: user
+        }, function(err, result) {
+            if (err) {
+                cb(err, null);
+            } else {
+                if (result.length > 0) {
+                    cb(err, result[0].id);
+                } else {
+                    cb("No such twitter user " + username, null);
+                }
+            }
+        });
+    }
+}
