@@ -10,8 +10,8 @@
         var collection = [];
         dataStream.onMessage(function(message) {
             try {
-                $rootScope.$emit("tweetAdded", message.data);
-                //collection.push(JSON.parse(message.data));
+                console.log(message);
+                $rootScope.$emit("tweetAdded", JSON.parse(message.data));
             } catch (e) {
                 if (message.data) {
                     console.log(message.data);

@@ -29,7 +29,9 @@
         $document
     ) {
 
-        $rootScope.$on("tweetAdded", function(data) {
+        $rootScope.$on("tweetAdded", function(event, data) {
+            console.log("got a tweet");
+            console.log(event);
             console.log(data);
         });
 
