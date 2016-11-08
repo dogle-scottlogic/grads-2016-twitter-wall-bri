@@ -106,20 +106,10 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         });
     }
 
-    // Compares two strings that represent numbers of greater size than can be handled as `number` types without loss
-    // of precision, and returns true if the first is numerically greater than the second
-    function idStrComp(a, b) {
-        if (Number(a) === Number(b)) {
-            return a > b;
-        }
-        return Number(a) > Number(b);
-    }
-
     var searchUpdater;
     var userUpdater;
 
     function readTextFile(file, callback) {
-        console.log(file);
         fs.readFile(file, "utf8", function(err, data) {
             if (err) {
                 console.log("Error reading config file: " + err);
@@ -134,7 +124,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
                     console.log("Error reading config file: " + err);
                 }
             }
-            callback("done");
+            callback();
         });
     }
 
@@ -145,24 +135,6 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         // setup stream
         createStream();
     });
-
-
-    // loadEventConfig(eventConfigFile, function() {
-    //     var hashtagUpdateFn = tweetResourceGetter("search/tweets", {
-    //         q: hashtags.concat(mentions).join(" OR "),
-    //         tweet_mode: "extended"
-    //     });
-    //     var timelineUpdateFn = tweetResourceGetter("statuses/user_timeline", {
-    //         screen_name: officialUser,
-    //         tweet_mode: "extended"
-    //     });
-    //
-    //     // Begins the loop of collecting tweets from the Twitter API
-    //     function beginResourceUpdates() {
-    //         resourceUpdate("search/tweets", hashtagUpdateFn, searchUpdater);
-    //         resourceUpdate("statuses/user_timeline", timelineUpdateFn, userUpdater);
-    //     }
-    // });
 
     return {
         getTweetData: getTweetData,
@@ -241,32 +213,10 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         return tweetStore;
     }
 
-    function getTweetData(since, maxTweets) {
-        since = since || new Date(0);
-        var updateIdx = tweetUpdates.findIndex(function(update) {
-            return update.since > since;
-        });
-        if (updateIdx === -1) {
-            return {
-                tweets: [],
-                updates: [],
-            };
-        }
-        var updates = tweetUpdates.slice(updateIdx);
-        var newTweetUpdates = updates.filter(function(update) {
-            return update.type === "new_tweets";
-        });
-        var tweets = [];
-        if (newTweetUpdates.length > 0) {
-            var minStartIdx = tweetStore.length - maxTweets > 0 ? tweetStore.length - maxTweets : 0;
-            var startIdx = newTweetUpdates[0].startIdx < minStartIdx ?
-                minStartIdx :
-                newTweetUpdates[0].startIdx;
-            tweets = tweetStore.slice(startIdx);
-        }
+    function getTweetData() {
         return {
-            tweets: tweets,
-            updates: updates,
+            tweets: tweetStore,
+            updates: []
         };
     }
 
@@ -310,6 +260,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     }
 
     function getInitialTweets() {
+        tweetStore = [];
         getAllUserTweets();
         getAllHashTweets();
     }
@@ -318,7 +269,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         var all = speakers.concat(mentions);
         all.forEach(function(user) {
             getUserTweets(user, 10, function(tweets) {
-                console.log("user: " + tweets.length);
+                tweetStore = tweetStore.concat(tweets);
             });
         });
     }
@@ -336,7 +287,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     function getAllHashTweets() {
         var query = hashtags.join(" OR ");
         getHashTweets(query, 30, function(tweets) {
-            console.log("hash: " + tweets.statuses.length);
+            tweetStore = tweetStore.concat(tweets.statuses);
         });
     }
 
