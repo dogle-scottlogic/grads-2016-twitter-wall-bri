@@ -3,15 +3,15 @@
         .module("TwitterWallApp")
         .factory("socketService", socketService);
 
-    function socketService($websocket) {
+    function socketService($websocket, $rootScope) {
         // Open a WebSocket connection
         var dataStream = $websocket("ws://localhost:8080");
 
         var collection = [];
-
         dataStream.onMessage(function(message) {
             try {
-                collection.push(JSON.parse(message.data));
+                $rootScope.$emit("tweetAdded", message.data);
+                //collection.push(JSON.parse(message.data));
             } catch (e) {
                 if (message.data) {
                     console.log(message.data);
