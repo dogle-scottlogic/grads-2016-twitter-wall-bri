@@ -327,7 +327,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     function tweetReceived(tweet) {
         // send to client
         console.log(tweet.user.screen_name);
-        socket.emit(tweet);
+        socket.emit(JSON.stringify(tweet));
     }
 
     function getTrackedWords() {
