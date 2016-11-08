@@ -278,7 +278,8 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         client.get("statuses/user_timeline", {
             screen_name: user,
             exclude_replies: true,
-            count: limit
+            count: limit,
+            tweet_mode: "extended"
         }, function(err, result) {
             done(result);
         });
@@ -295,7 +296,8 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         client.get("search/tweets", {
             q: query,
             result_type: "recent",
-            count: limit
+            count: limit,
+            tweet_mode: "extended"
         }, function(err, result) {
             done(result);
         });

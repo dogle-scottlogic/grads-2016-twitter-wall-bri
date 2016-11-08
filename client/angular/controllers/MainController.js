@@ -212,23 +212,21 @@
         function updateTweets(done) {
             // Gets the list of tweets from the server
             twitterWallDataService.getTweets(function(results) {
-                if (results.updates.length > 0) {
-                    var newTweets = [];
-                    if (results.tweets.length > 0) {
-                        results.tweets.forEach(function(tweet) {
-                            tweet.displayText = $sce.trustAsHtml(tweetTextManipulationService.getDisplayText(tweet));
-                        });
-                        newTweets = $scope.setFlagsForTweets(results.tweets, vm.updates);
-                    }
-                    $scope.tweets = $scope.tweets.concat(newTweets);
-                    newTweets.forEach(function(newTweet) {
-                        changedTweets[newTweet.id_str] = newTweet;
+                var newTweets = [];
+                if (results.tweets.length > 0) {
+                    results.tweets.forEach(function(tweet) {
+                        tweet.displayText = $sce.trustAsHtml(tweetTextManipulationService.getDisplayText(tweet));
                     });
-                    $scope.tweets = $scope.setFlagsForTweets($scope.tweets, results.updates);
-                    vm.updates = vm.updates.concat(results.updates);
-                    onContentChanged();
+                    newTweets = $scope.setFlagsForTweets(results.tweets, vm.updates);
                 }
-                done($scope.tweets);
+                $scope.tweets = newTweets;
+                newTweets.forEach(function(newTweet) {
+                    changedTweets[newTweet.id_str] = newTweet;
+                });
+                $scope.tweets = $scope.setFlagsForTweets($scope.tweets, results.updates);
+                //vm.updates = vm.updates.concat(results.updates);
+                onContentChanged();
+                done();
             });
         }
 
