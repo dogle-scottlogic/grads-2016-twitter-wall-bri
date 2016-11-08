@@ -1,3 +1,5 @@
+var socket = require("./websockets");
+
 module.exports = function(client, fs, eventConfigFile, mkdirp) {
 
     var tweetStore = [];
@@ -317,7 +319,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
                 }
             });
             stream.on("error", function(error) {
-                console.log(error);
+                console.log("Streaming error:\n\t" + error);
             });
         });
     }
@@ -325,6 +327,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     function tweetReceived(tweet) {
         // send to client
         console.log(tweet.user.screen_name);
+        socket.emit(tweet);
     }
 
     function getTrackedWords() {
