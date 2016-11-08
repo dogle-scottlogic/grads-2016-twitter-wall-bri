@@ -26,6 +26,7 @@
         $window,
         $document
     ) {
+
         var vm = this;
 
         $scope.isMobileClient = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -125,12 +126,17 @@
                 adminViewWatcher();
             });
             // Begin update loop
-            updateTweets();
-            $interval(updateTweets, 500);
-            $interval(redisplayTweets, 100);
+            updateTweets(function() {
+                redisplayTweets();
+            });
             if (!$scope.loggedIn) {
-                $interval(updateInteractions, 5000);
+                updateInteractions();
             }
+            // $interval(updateTweets, 500);
+            // $interval(redisplayTweets, 100);
+            // if (!$scope.loggedIn) {
+            //     $interval(updateInteractions, 5000);
+            // }
         }
 
         function showTweetImage(tweet) {
@@ -203,8 +209,9 @@
             });
         }
 
-        function updateTweets() {
-            twitterWallDataService.getTweets(vm.latestUpdateTime).then(function(results) {
+        function updateTweets(done) {
+            // Gets the list of tweets from the server
+            twitterWallDataService.getTweets(function(results) {
                 if (results.updates.length > 0) {
                     var newTweets = [];
                     if (results.tweets.length > 0) {
@@ -217,11 +224,11 @@
                     newTweets.forEach(function(newTweet) {
                         changedTweets[newTweet.id_str] = newTweet;
                     });
-                    vm.latestUpdateTime = results.updates[results.updates.length - 1].since;
                     $scope.tweets = $scope.setFlagsForTweets($scope.tweets, results.updates);
                     vm.updates = vm.updates.concat(results.updates);
                     onContentChanged();
                 }
+                done($scope.tweets);
             });
         }
 

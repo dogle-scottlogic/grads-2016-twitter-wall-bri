@@ -11,15 +11,12 @@
             updateInteractions: updateInteractions
         };
 
-        function getTweets(since) {
+        function getTweets(done) {
             var query = {};
-            if (since) {
-                query.since = since;
-            }
             return $http.get("/api/tweets", {
                 params: query
             }).then(function(result) {
-                return result.data;
+                done(result.data);
             });
         }
 
