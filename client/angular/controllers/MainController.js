@@ -8,6 +8,7 @@
         "tweetTextManipulationService",
         "columnAssignmentService",
         "tweetInfoService",
+        "socketService",
         "$interval",
         "$window",
         "$document",
@@ -20,6 +21,7 @@
         tweetTextManipulationService,
         columnAssignmentService,
         tweetInfoService,
+        socketService,
         $interval,
         $window,
         $document
@@ -27,7 +29,6 @@
         var vm = this;
 
         $scope.isMobileClient = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
         $scope.displayColumns = [
             [],
             [],

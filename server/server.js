@@ -1,6 +1,7 @@
 var express = require("express");
 var cookieParser = require("cookie-parser");
 var bodyParser = require("body-parser");
+var ws = require("./websockets");
 
 module.exports = function(port, tweetSearcher, googleAuthoriser) {
     var app = express();
@@ -10,6 +11,9 @@ module.exports = function(port, tweetSearcher, googleAuthoriser) {
     app.use(express.static("client"));
     app.use(cookieParser());
     app.use(bodyParser.json());
+    app.use('/socket', express.static(__dirname + '/../node_modules/angular-websocket/dist/'));
+
+    var server = ws.init(app);
 
     app.get("/oauth", function(req, res) {
         googleAuthoriser.authorise(req, function(err, token) {
@@ -209,5 +213,5 @@ module.exports = function(port, tweetSearcher, googleAuthoriser) {
         return tweetSearcher.getTweetData(since, includeDeleted);
     }
 
-    return app.listen(port);
+    return server.listen(port);
 };
