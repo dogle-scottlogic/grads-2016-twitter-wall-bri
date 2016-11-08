@@ -20,7 +20,6 @@ var twitterClient = new Twitter({
 });
 var tweetSearcher = require("./server/tweetSearch")(twitterClient, fs, "./server/config/eventConfig.json", mkdirp);
 
-process.on("exit", tweetSearcher.closeLogFile);
 process.on("SIGINT", process.exit);
 process.on("SIGTERM", process.exit);
 

@@ -10,17 +10,6 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     var officialUser;
     var inApprovalMode = false;
 
-    var rateLimitDir = "./server/temp/";
-    var rateLimitFile = rateLimitDir + "rateLimitRemaining.json";
-
-    var logDir = "./server/logs/";
-    var logTweetsFilename = logDir + "tweets.json";
-    var logUpdatesFilename = logDir + "updates.json";
-    var logTweetsFile;
-    var logUpdatesFile;
-    var logTweetsCount = 0;
-    var logUpdatesCount = 0;
-
     var stream;
 
     function tweetType(tweet) {
@@ -55,7 +44,6 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
             newUpdate[propKey] = props[propKey];
         });
         tweetUpdates.push(newUpdate);
-        logUpdates([newUpdate]);
     }
 
     function addTweetItem(tweets, tag) {
@@ -72,7 +60,6 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
                 setDeletedStatus(tweet.id_str, true);
             });
         }
-        logTweets(tweets);
     }
 
     function setApprovalMode(approveTweets) {
@@ -83,57 +70,6 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         return {
             status: inApprovalMode
         };
-    }
-
-    function updateInteractions(visibleTweets, callback) {
-        var interactionUpdates = {
-            favourites: [],
-            retweets: []
-        };
-        var tweets = JSON.parse(visibleTweets);
-        var ids = tweets.map(function(tweet) {
-            return tweet.id_str;
-        });
-        var params = {
-            id: ids.join(),
-            trim_user: true
-
-        };
-        if (apiResources["statuses/lookup"].requestsRemaining > 0) {
-            client.get("statuses/lookup", params, function(error, data, response) {
-                if (!error) {
-                    data.forEach(function(tweet) {
-                        var previous = tweets.find(function(inTweet) {
-                            return tweet.id_str === inTweet.id_str;
-                        });
-                        if (previous.favorite_count !== tweet.favorite_count) {
-                            interactionUpdates.favourites.push({
-                                id: tweet.id_str,
-                                value: tweet.favorite_count
-                            });
-                        }
-                        if (previous.retweet_count !== tweet.retweet_count) {
-                            interactionUpdates.retweets.push({
-                                id: tweet.id_str,
-                                value: tweet.retweet_count
-                            });
-                        }
-                    });
-                    apiResources["statuses/lookup"].requestsRemaining = response.headers["x-rate-limit-remaining"];
-                    apiResources["statuses/lookup"].resetTime = (Number(response.headers["x-rate-limit-reset"]) + 1) * 1000;
-                    callback(null, interactionUpdates);
-                } else {
-                    console.log("Interaction update error:");
-                    console.log(error);
-                    callback(error);
-                }
-            });
-        } else {
-            var lookupTimer = setTimeout(function() {
-                apiResources["statuses/lookup"].requestsRemaining = 1;
-            }, apiResources["statuses/lookup"].resetTime - new Date().getTime());
-            callback("too many API requests right now");
-        }
     }
 
     function findLast(arr, predicate, thisArg) {
@@ -179,107 +115,54 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         return Number(a) > Number(b);
     }
 
-    var apiResources = {
-        "search/tweets": {
-            since_id: "0",
-            basePath: "search",
-            requestsRemaining: 0,
-            resetTime: 0,
-            addData: function(tweets) {
-                this.since_id = tweets.statuses.reduce(function(since, currTweet) {
-                    return idStrComp(since, currTweet.id_str) ? since : currTweet.id_str;
-                }, this.since_id);
-                var taggedTweets = tweets.statuses.filter(function(tweet) {
-                    return tweetType(tweet) === "tagged";
-                });
-                addTweetItem(taggedTweets, "tagged");
-            }
-        },
-        "statuses/user_timeline": {
-            since_id: "0",
-            basePath: "statuses",
-            requestsRemaining: 0,
-            resetTime: 0,
-            addData: function(tweets) {
-                this.since_id = tweets.reduce(function(since, currTweet) {
-                    return idStrComp(since, currTweet.id_str) ? since : currTweet.id_str;
-                }, this.since_id);
-                var officialTweets = tweets.filter(function(tweet) {
-                    return tweetType(tweet) === "official";
-                });
-                addTweetItem(officialTweets, "official");
-            }
-        },
-        "statuses/lookup": {
-            basePath: "statuses",
-            requestsRemaining: 0,
-            resetTime: 0
-        },
-    };
-
     var searchUpdater;
     var userUpdater;
 
-    openLogFile(function() {
-
-        loadEventConfig(eventConfigFile, function() {
-            var hashtagUpdateFn = tweetResourceGetter("search/tweets", {
-                q: hashtags.concat(mentions).join(" OR "),
-                tweet_mode: "extended"
-            });
-            var timelineUpdateFn = tweetResourceGetter("statuses/user_timeline", {
-                screen_name: officialUser,
-                tweet_mode: "extended"
-            });
-            // Begins the chain of callbacks defined below
-            rateCheckLoop();
-            // Callback that loops every 5 seconds until the server has confirmed the ability to safely access the rate
-            // limits API; calls `rateSaveLoop` on success
-            function rateCheckLoop() {
-                checkRateLimitSafety(function(success) {
-                    if (success) {
-                        getApplicationRateLimits(rateSaveLoop);
-                    } else {
-                        var loopDelay = 5000;
-                        console.log("Could not verify rate limit safety, retrying after " + loopDelay + "ms...");
-                        setTimeout(rateCheckLoop, loopDelay);
-                    }
-                });
-            }
-
-            // Callback that receives the rate limit data from `getApplicationRateLimits` and loops every 5 seconds until
-            // the server has saved the rate limit data successfully; calls `beginResourceUpdates` on success
-            function rateSaveLoop(rateLimitData) {
-                mkdirp(rateLimitDir, function(err) {
-                    // Count a return value of `EEXIST` as successful, as it means the directory already exists
-                    if (!err || err.code === "EEXIST") {
-                        fs.writeFile(rateLimitFile, JSON.stringify(rateLimitData), function(err) {
-                            if (!err) {
-                                beginResourceUpdates();
-                            } else {
-                                repeatLoop();
-                            }
-                        });
-                    } else {
-                        repeatLoop();
-                    }
-                });
-
-                function repeatLoop() {
-                    var loopDelay = 5000;
-                    console.log("Could not save rate limit data, retrying after " + loopDelay + "ms...");
-                    setTimeout(rateSaveLoop.bind(undefined, rateLimitData), loopDelay);
+    function readTextFile(file, callback) {
+        console.log(file);
+        fs.readFile(file, "utf8", function(err, data) {
+            if (err) {
+                console.log("Error reading config file: " + err);
+            } else {
+                try {
+                    var json = JSON.parse(data);
+                    hashtags = json.hashtags;
+                    mentions = json.mentions;
+                    officialUser = json.officialUser;
+                    speakers = json.speakers;
+                } catch (err) {
+                    console.log("Error reading config file: " + err);
                 }
             }
-
-            // Begins the loop of collecting tweets from the Twitter API
-            function beginResourceUpdates() {
-                resourceUpdate("search/tweets", hashtagUpdateFn, searchUpdater);
-                resourceUpdate("statuses/user_timeline", timelineUpdateFn, userUpdater);
-            }
+            callback("done");
         });
+    }
 
+    // load all tracked items
+    readTextFile(eventConfigFile, function() {
+        // do initial REST API call
+        getInitialTweets();
+        // setup stream
+        createStream();
     });
+
+
+    // loadEventConfig(eventConfigFile, function() {
+    //     var hashtagUpdateFn = tweetResourceGetter("search/tweets", {
+    //         q: hashtags.concat(mentions).join(" OR "),
+    //         tweet_mode: "extended"
+    //     });
+    //     var timelineUpdateFn = tweetResourceGetter("statuses/user_timeline", {
+    //         screen_name: officialUser,
+    //         tweet_mode: "extended"
+    //     });
+    //
+    //     // Begins the loop of collecting tweets from the Twitter API
+    //     function beginResourceUpdates() {
+    //         resourceUpdate("search/tweets", hashtagUpdateFn, searchUpdater);
+    //         resourceUpdate("statuses/user_timeline", timelineUpdateFn, userUpdater);
+    //     }
+    // });
 
     return {
         getTweetData: getTweetData,
@@ -295,32 +178,9 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         removeSpeaker: removeSpeaker,
         displayBlockedTweet: displayBlockedTweet,
         setRetweetDisplayStatus: setRetweetDisplayStatus,
-        updateInteractions: updateInteractions,
         setApprovalMode: setApprovalMode,
         getApprovalMode: getApprovalMode,
-        closeLogFile: closeLogFile,
     };
-
-    function checkRateLimitSafety(callback) {
-        fs.readFile(rateLimitFile, "utf8", function(err, data) {
-            var success = false;
-            if (err) {
-                if (err.code === "ENOENT") {
-                    success = true;
-                } else {
-                    console.log("Error reading rate limit safety file: " + err);
-                }
-            } else {
-                try {
-                    var rateLimitInfo = JSON.parse(data);
-                    success = (rateLimitInfo.remaining > 1 || new Date() > new Date(rateLimitInfo.resetTime));
-                } catch (err) {
-                    console.log("Error parsing rate limit safety file: " + err);
-                }
-            }
-            callback(success);
-        });
-    }
 
     function getBlockedUsers() {
         return blockedUsers;
@@ -373,20 +233,6 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         });
     }
 
-    function resourceUpdate(apiResource, updateFn, timer) {
-        if (apiResources[apiResource].requestsRemaining > 0) {
-            updateFn();
-            timer = setTimeout(function() {
-                resourceUpdate(apiResource, updateFn, timer);
-            }, 5000);
-        } else {
-            timer = setTimeout(function() {
-                apiResources[apiResource].requestsRemaining = 1;
-                resourceUpdate(apiResource, updateFn, timer);
-            }, apiResources[apiResource].resetTime - new Date().getTime());
-        }
-    }
-
     function loadTweets(tweets, type) {
         addTweetItem(tweets, type);
     }
@@ -422,97 +268,6 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
             tweets: tweets,
             updates: updates,
         };
-    }
-
-    function tweetResourceGetter(resource, query) {
-        return getTweetResource.bind(undefined, resource, query);
-    }
-
-    function getTweetResource(resource, query) {
-        var last_id = apiResources[resource].since_id;
-        if (last_id !== "0") {
-            query.since_id = last_id;
-        }
-        client.get(resource, query, function(error, data, response) {
-            if (!error) {
-                apiResources[resource].requestsRemaining = response.headers["x-rate-limit-remaining"];
-                apiResources[resource].resetTime = (Number(response.headers["x-rate-limit-reset"]) + 1) * 1000;
-                if (data) {
-                    apiResources[resource].addData(data);
-                }
-            } else {
-                if (response && response.headers && response.headers["x-rate-limit-remaining"]) {
-                    apiResources[resource].requestsRemaining = response.headers["x-rate-limit-remaining"];
-                    apiResources[resource].resetTime = (Number(response.headers["x-rate-limit-reset"]) + 1) * 1000;
-                } else {
-                    apiResources[resource].requestsRemaining -= 1;
-                }
-                console.log("Tweet resource '" + resource + "' error:");
-                console.log(error);
-            }
-        });
-    }
-
-    function getApplicationRateLimits(callback) {
-        var resourceNames = Object.keys(apiResources);
-        var resourcePaths = [];
-        resourceNames.forEach(function(resourceName) {
-            if (resourcePaths.indexOf(apiResources[resourceName].basePath) === -1) {
-                resourcePaths.push(apiResources[resourceName].basePath);
-            }
-        });
-        var query = {
-            resources: resourcePaths.join(","),
-        };
-        client.get("application/rate_limit_status", query, function(error, data, response) {
-            var rateLimitData = {
-                remaining: response.headers["x-rate-limit-remaining"],
-                resetTime: (Number(response.headers["x-rate-limit-reset"]) + 1) * 1000,
-            };
-            if (!error && data) {
-                resourceNames.forEach(function(name) {
-                    var resourceProfile = data.resources[apiResources[name].basePath]["/" + name];
-                    apiResources[name].requestsRemaining = resourceProfile.remaining;
-                    apiResources[name].resetTime = (resourceProfile.reset + 1) * 1000;
-                });
-            } else {
-                throw new Error("Failed to get safe twitter rate limits.");
-            }
-            callback(rateLimitData);
-        });
-    }
-
-    function loadEventConfig(location, callback) {
-        fs.readFile(location, "utf8", function(err, data) {
-            if (err) {
-                console.log("Error reading event config file" + err);
-            } else {
-                try {
-                    var loadedSpeakers = JSON.parse(data).speakers;
-                    var loadTime = new Date();
-                    loadedSpeakers.forEach(function(loadedSpeaker) {
-                        addTweetUpdate("speaker_update", {
-                            screen_name: loadedSpeaker,
-                            operation: "add"
-                        });
-                        speakers.push(loadedSpeaker);
-                    });
-                    hashtags = JSON.parse(data).hashtags;
-                    mentions = JSON.parse(data).mentions;
-                    officialUser = JSON.parse(data).officialUser;
-                    addTweetUpdate("speaker_update", {
-                        screen_name: officialUser,
-                        operation: "add"
-                    });
-                    getUserIDs(function() {
-                        callback();
-                    });
-                } catch (err) {
-                    console.log("Error parsing event config file: " + err);
-                    callback();
-                }
-            }
-        });
     }
 
     function addSpeaker(name) {
@@ -551,60 +306,72 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     }
 
     function getSpeakers() {
-        createStream();
         return speakers;
     }
 
-    function openLogFile(callback) {
-        mkdirp(logDir, function(err) {
-            // Count a return value of `EEXIST` as successful, as it means the directory already exists
-            if (err && err.code !== "EEXIST") {
-                throw new Error("Error attempting to create the server log directory: " + logDir);
-            }
-            logTweetsFile = fs.openSync(logTweetsFilename, "w", null);
-            fs.writeSync(logTweetsFile, "[");
-            logUpdatesFile = fs.openSync(logUpdatesFilename, "w", null);
-            fs.writeSync(logUpdatesFile, "[");
-            callback();
+    function getInitialTweets() {
+        getAllUserTweets();
+        getAllHashTweets();
+    }
+
+    function getAllUserTweets() {
+        var all = speakers.concat(mentions);
+        all.forEach(function(user) {
+            getUserTweets(user, 10, function(tweets) {
+                console.log("user: " + tweets.length);
+            });
         });
     }
 
-    function closeLogFile() {
-        fs.writeSync(logTweetsFile, "]");
-        fs.closeSync(logTweetsFile);
-        fs.writeSync(logUpdatesFile, "]");
-        fs.closeSync(logUpdatesFile);
+    function getUserTweets(user, limit, done) {
+        client.get("statuses/user_timeline", {
+            screen_name: user,
+            exclude_replies: true,
+            count: limit
+        }, function(err, result) {
+            done(result);
+        });
     }
 
-    function logTweets(tweets) {
-        fs.writeSync(logTweetsFile, (logTweetsCount === 0 ? "" : ",") + tweets.map(JSON.stringify).join(","));
-        logTweetsCount += tweets.length;
+    function getAllHashTweets() {
+        var query = hashtags.join(" OR ");
+        getHashTweets(query, 30, function(tweets) {
+            console.log("hash: " + tweets.statuses.length);
+        });
     }
 
-    function logUpdates(updates) {
-        fs.writeSync(logUpdatesFile, (logUpdatesCount === 0 ? "" : ",") + updates.map(JSON.stringify).join(","));
-        logUpdatesCount += updates.length;
+    function getHashTweets(query, limit, done) {
+        client.get("search/tweets", {
+            q: query,
+            result_type: "recent",
+            count: limit
+        }, function(err, result) {
+            done(result);
+        });
     }
 
     function createStream() {
-        var words = getTrackedWords();
-        var users = getTrackedUsers();
-        stream = client.stream("statuses/filter", {
-            track: words,
-            follow: users
-        });
-        stream.on("data", function(event) {
-            if (event.user) {
-                tweetReceived(tweet);
-            }
-        });
-        stream.on("error", function(error) {
-            console.log(error);
+        getUserIDs(function() {
+            var words = getTrackedWords();
+            var users = getTrackedUsers();
+            stream = client.stream("statuses/filter", {
+                track: words,
+                follow: users
+            });
+            stream.on("data", function(event) {
+                if (event.user) {
+                    tweetReceived(event);
+                }
+            });
+            stream.on("error", function(error) {
+                console.log(error);
+            });
         });
     }
 
     function tweetReceived(tweet) {
         // send to client
+        console.log(tweet.user.screen_name);
     }
 
     function getTrackedWords() {
