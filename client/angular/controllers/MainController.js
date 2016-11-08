@@ -30,9 +30,11 @@
     ) {
 
         $rootScope.$on("tweetAdded", function(event, data) {
-            console.log("got a tweet");
-            console.log(event);
-            console.log(data);
+            $scope.tweets.push(data);
+            console.log($scope.tweets.length);
+            // updateTweets(function() {
+            //     redisplayTweets();
+            // });
         });
 
         var vm = this;
@@ -140,11 +142,6 @@
             if (!$scope.loggedIn) {
                 updateInteractions();
             }
-            // $interval(updateTweets, 500);
-            // $interval(redisplayTweets, 100);
-            // if (!$scope.loggedIn) {
-            //     $interval(updateInteractions, 5000);
-            // }
         }
 
         function showTweetImage(tweet) {
@@ -344,22 +341,22 @@
                     });
                 });
             });
-            twitterWallDataService.updateInteractions(JSON.stringify(visibleTweets)).then(function(results) {
-                if (results) {
-                    results.favourites.forEach(function(favouriteUpdate) {
-                        var updatedTweet = $scope.tweets.find(function(tweet) {
-                            return tweet.id_str === favouriteUpdate.id;
-                        });
-                        updatedTweet.favorite_count = favouriteUpdate.value;
-                    });
-                    results.retweets.forEach(function(retweetUpdate) {
-                        var updatedTweet = $scope.tweets.find(function(tweet) {
-                            return tweet.id_str === retweetUpdate.id;
-                        });
-                        updatedTweet.retweet_count = retweetUpdate.value;
-                    });
-                }
-            });
+            // twitterWallDataService.updateInteractions(JSON.stringify(visibleTweets)).then(function(results) {
+            //     if (results) {
+            //         results.favourites.forEach(function(favouriteUpdate) {
+            //             var updatedTweet = $scope.tweets.find(function(tweet) {
+            //                 return tweet.id_str === favouriteUpdate.id;
+            //             });
+            //             updatedTweet.favorite_count = favouriteUpdate.value;
+            //         });
+            //         results.retweets.forEach(function(retweetUpdate) {
+            //             var updatedTweet = $scope.tweets.find(function(tweet) {
+            //                 return tweet.id_str === retweetUpdate.id;
+            //             });
+            //             updatedTweet.retweet_count = retweetUpdate.value;
+            //         });
+            //     }
+            // });
         }
 
         function displayTweets(tweets) {
