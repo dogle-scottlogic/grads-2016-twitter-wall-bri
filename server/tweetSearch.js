@@ -326,8 +326,14 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
 
     function tweetReceived(tweet) {
         // send to client
-        console.log(tweet.user.screen_name);
-        socket.emit(JSON.stringify(tweet));
+        if (tweet !== undefined) {
+            if (tweet.truncated && tweet.extended_tweet !== undefined) {
+                tweet.full_text = tweet.extended_tweet.full_text;
+            } else {
+                tweet.full_text = tweet.text;
+            }
+            socket.emit(JSON.stringify(tweet));
+        }
     }
 
     function getTrackedWords() {

@@ -38,7 +38,6 @@ var init = function(app) {
 };
 
 var emit = function(message) {
-    console.log("sending message " + message);
     ws.broadcast(message);
 }
 

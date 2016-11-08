@@ -31,10 +31,9 @@
 
         $rootScope.$on("tweetAdded", function(event, data) {
             $scope.tweets.push(data);
-            console.log($scope.tweets.length);
-            // updateTweets(function() {
-            //     redisplayTweets();
-            // });
+            updateTweets(function() {
+                redisplayTweets();
+            });
         });
 
         var vm = this;
@@ -216,23 +215,30 @@
 
         function updateTweets(done) {
             // Gets the list of tweets from the server
-            twitterWallDataService.getTweets(function(results) {
-                var newTweets = [];
-                if (results.tweets.length > 0) {
-                    results.tweets.forEach(function(tweet) {
-                        tweet.displayText = $sce.trustAsHtml(tweetTextManipulationService.getDisplayText(tweet));
+            if ($scope.tweets.length === 0) {
+                twitterWallDataService.getTweets(function(results) {
+                    var newTweets = [];
+                    if (results.tweets.length > 0) {
+                        results.tweets.forEach(function(tweet) {
+                            tweet.displayText = $sce.trustAsHtml(tweetTextManipulationService.getDisplayText(tweet));
+                        });
+                        newTweets = $scope.setFlagsForTweets(results.tweets, vm.updates);
+                    }
+                    $scope.tweets = newTweets;
+                    newTweets.forEach(function(newTweet) {
+                        changedTweets[newTweet.id_str] = newTweet;
                     });
-                    newTweets = $scope.setFlagsForTweets(results.tweets, vm.updates);
-                }
-                $scope.tweets = newTweets;
-                newTweets.forEach(function(newTweet) {
-                    changedTweets[newTweet.id_str] = newTweet;
+                    $scope.tweets = $scope.setFlagsForTweets($scope.tweets, results.updates);
+                    //vm.updates = vm.updates.concat(results.updates);
+                    onContentChanged();
+                    done();
                 });
-                $scope.tweets = $scope.setFlagsForTweets($scope.tweets, results.updates);
-                //vm.updates = vm.updates.concat(results.updates);
-                onContentChanged();
-                done();
-            });
+            } else {
+                console.log("Update tweets: socket");
+                var lastTweet = $scope.tweets[$scope.tweets.length-1];
+                lastTweet.displayText = $sce.trustAsHtml(tweetTextManipulationService.getDisplayText(lastTweet));
+                console.log($scope.tweets[$scope.tweets.length-1]);
+            }
         }
 
         var logoBoxWidth;
