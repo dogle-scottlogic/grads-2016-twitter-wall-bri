@@ -10,6 +10,7 @@ module.exports = function(port, tweetSearcher, googleAuthoriser) {
     app.use(express.static("client"));
     app.use(cookieParser());
     app.use(bodyParser.json());
+    app.use('/socket', express.static(__dirname + '/../node_modules/angular-websocket/dist/'));
 
     app.get("/oauth", function(req, res) {
         googleAuthoriser.authorise(req, function(err, token) {

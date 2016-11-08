@@ -9,3 +9,4 @@ server/config/*
 server/logs/
 client/css/*.css
 client/css/*.map
+setEnv.bat
