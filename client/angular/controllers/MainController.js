@@ -53,7 +53,7 @@
         var maxTweetSlotSize = 2;
         var tweetSlotSizes = [];
 
-        $rootScope.tweets = [];
+        $scope.tweets = [];
         var changedTweets = {};
 
         vm.updates = [];
@@ -85,7 +85,7 @@
             $document.documentElement.clientWidth ||
             $document.body.clientWidth;
 
-        $rootScope.tweetsizeStyles = "";
+        $scope.tweetsizeStyles = "";
 
         var tweetViews = {
             client: {
@@ -174,11 +174,11 @@
         function redisplayTweets() {
             if (vm.redisplayFlags.content) {
                 vm.redisplayFlags.size = true;
-                displayTweets($rootScope.tweets);
+                displayTweets($scope.tweets);
             }
             if (vm.redisplayFlags.size) {
                 if ($scope.isMobile) {
-                    calcTweetSlotCounts([$rootScope.tweets], [{
+                    calcTweetSlotCounts([$scope.tweets], [{
                         slots: 4,
                         extraContentSpacing: 0
                     }]);
@@ -227,11 +227,11 @@
                     });
                     newTweets = $scope.setFlagsForTweets(results.tweets, vm.updates);
                 }
-                $rootScope.tweets = newTweets;
+                $scope.tweets = newTweets;
                 newTweets.forEach(function(newTweet) {
                     changedTweets[newTweet.id_str] = newTweet;
                 });
-                $rootScope.tweets = $scope.setFlagsForTweets($rootScope.tweets, results.updates);
+                $scope.tweets = $scope.setFlagsForTweets($scope.tweets, results.updates);
                 //vm.updates = vm.updates.concat(results.updates);
                 onContentChanged();
                 done();
@@ -347,13 +347,13 @@
             twitterWallDataService.updateInteractions(JSON.stringify(visibleTweets)).then(function(results) {
                 if (results) {
                     results.favourites.forEach(function(favouriteUpdate) {
-                        var updatedTweet = $rootScope.tweets.find(function(tweet) {
+                        var updatedTweet = $scope.tweets.find(function(tweet) {
                             return tweet.id_str === favouriteUpdate.id;
                         });
                         updatedTweet.favorite_count = favouriteUpdate.value;
                     });
                     results.retweets.forEach(function(retweetUpdate) {
-                        var updatedTweet = $rootScope.tweets.find(function(tweet) {
+                        var updatedTweet = $scope.tweets.find(function(tweet) {
                             return tweet.id_str === retweetUpdate.id;
                         });
                         updatedTweet.retweet_count = retweetUpdate.value;
@@ -483,7 +483,7 @@
                     tweetStyles.push(inAnimStyle);
                 });
             });
-            $rootScope.tweetsizeStyles = tweetStyles.join("\n");
+            $scope.tweetsizeStyles = tweetStyles.join("\n");
         }
 
         $scope.getMobileTweetWidth = function(tweet) {
