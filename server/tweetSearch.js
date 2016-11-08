@@ -595,12 +595,16 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         });
         stream.on("data", function(event) {
             if (event.user) {
-                console.log(event);
+                tweetReceived(tweet);
             }
         });
         stream.on("error", function(error) {
             console.log(error);
         });
+    }
+
+    function tweetReceived(tweet) {
+        // send to client
     }
 
     function getTrackedWords() {
