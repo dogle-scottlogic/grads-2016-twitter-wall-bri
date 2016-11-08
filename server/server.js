@@ -198,8 +198,7 @@ module.exports = function(port, tweetSearcher, googleAuthoriser) {
     });
 
     app.get("/api/tweets", function(req, res) {
-        var since = req.query.since ? new Date(req.query.since) : undefined;
-        res.json(getTweets(since, 200));
+        res.json(getTweets());
     });
 
     app.get("/api/interactions", function(req, res) {
@@ -209,8 +208,8 @@ module.exports = function(port, tweetSearcher, googleAuthoriser) {
         });
     });
 
-    function getTweets(since, includeDeleted) {
-        return tweetSearcher.getTweetData(since, includeDeleted);
+    function getTweets() {
+        return tweetSearcher.getTweetData();
     }
 
     return server.listen(port);
