@@ -29,7 +29,7 @@ var init = function(app) {
         });
         webs.on("error", function(err) {
             console.log("error " + err);
-        })
+        });
         webs.send("connected");
         console.log("connected");
     });
