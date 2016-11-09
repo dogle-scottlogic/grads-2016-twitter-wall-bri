@@ -66,7 +66,6 @@
             columnAssignmentService.clearStore("admin");
             columnAssignmentService.clearStore("client");
             getTweets();
-            console.log($scope.tweets);
         });
 
         var vm = this;
