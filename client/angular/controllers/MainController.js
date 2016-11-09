@@ -55,6 +55,12 @@
             }
         });
 
+        $rootScope.$on("updateTweet", function(event, data) {
+            changedTweets[data.id_str] = data;
+            onContentChanged();
+            redisplayTweets();
+        });
+
         var vm = this;
 
         $scope.isMobileClient = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
