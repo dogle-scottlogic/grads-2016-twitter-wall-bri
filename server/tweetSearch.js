@@ -11,7 +11,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     var userIDs = [];
     var officialUser;
     var inApprovalMode = false;
-    var limit = 100;
+    var limit = 50;
 
     var stream;
 
@@ -347,7 +347,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
             }
             if (tweetStore.length >= limit) {
                 var removedTweet = tweetStore.shift();
-                socket.emit([removedTweet], "remove");
+                socket.emit([removedTweet.id_str], "remove");
             }
             tweetStore.push(tweet);
             socket.emit(tweet, "tweet");
@@ -436,7 +436,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         var removed = [];
         while (tweetStore.length > limit) {
             var removedTweet = tweetStore.shift();
-            removed.push(removedTweet);
+            removed.push(removedTweet.id_str);
         }
         socket.emit(removed, "remove");
     }

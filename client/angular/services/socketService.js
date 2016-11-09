@@ -18,7 +18,7 @@
                         $rootScope.$emit("tweetAdded", message);
                         break;
                     case "remove":
-                        $rootScope.$emit("removeTweets", message);
+                        $rootScope.$emit("removeTweet", message);
                         break;
                     default:
                         console.log("no type found");

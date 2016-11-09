@@ -39,14 +39,18 @@
         $rootScope.$on("removeTweet", function(event, data) {
             var removed = false;
             for (var i = 0; i < data.length; i++) {
-                for (var j = 0; j < $scope.tweets; j++) {
-                    if ($scope.tweets[j] === data[i]) {
-                        $scope.tweets = $scope.tweets.splice(j, 1);
+                for (var j = 0; j < $scope.tweets.length; j++) {
+                    if ($scope.tweets[j].id_str === data[i]) {
+                        $scope.tweets.splice(j, 1);
                         removed = true;
+                        columnAssignmentService.clearStore("admin");
+                        columnAssignmentService.clearStore("client");
+                        break;
                     }
                 }
             }
             if (removed) {
+                onContentChanged();
                 redisplayTweets();
             }
         });
@@ -386,11 +390,11 @@
                 return changedTweets[key];
             });
             var clientDisplayColumns;
-            changedTweets = {};
+            // changedTweets = {};
             for (var tweetViewName in tweetViews) {
                 var tweetView = tweetViews[tweetViewName];
                 var viewDisplayColumns = columnAssignmentService.assignDisplayColumns(
-                    changedTweetsArr, tweetView.columnDataList, tweetView.backfill, tweetView.showAllImages, tweetViewName
+                    tweets, tweetView.columnDataList, tweetView.backfill, tweetView.showAllImages, tweetViewName
                 );
                 if (tweetViewName === getCurrentTweetView()) {
                     displayColumns = viewDisplayColumns;
