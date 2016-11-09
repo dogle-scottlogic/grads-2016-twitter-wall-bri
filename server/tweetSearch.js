@@ -11,6 +11,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     var userIDs = [];
     var officialUser;
     var inApprovalMode = false;
+    var limit = 100;
 
     var stream;
 
@@ -151,6 +152,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         setRetweetDisplayStatus: setRetweetDisplayStatus,
         setApprovalMode: setApprovalMode,
         getApprovalMode: getApprovalMode,
+        setLimit: setLimit,
     };
 
     function getBlockedUsers() {
@@ -349,7 +351,9 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
             } else {
                 tweet.full_text = tweet.text;
             }
-            tweetStore.shift();
+            if (tweetStore.length >= limit) {
+                tweetStore.shift();
+            }
             tweetStore.push(tweet);
             socket.emit(JSON.stringify(tweet));
         }
@@ -416,6 +420,10 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
             return aMills - bMills;
         };
         tweetStore.sort(sort);
+
+        while (tweetStore.length > limit) {
+            tweetStore.shift();
+        }
     }
 
     function tweetSetup() {
@@ -426,5 +434,12 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
             sortTweets();
             createStream();
         });
+    }
+
+    function setLimit(num) {
+        limit = num;
+        while (tweetStore.length > limit) {
+            tweetStore.shift();
+        }
     }
 }

@@ -197,6 +197,12 @@ module.exports = function(port, tweetSearcher, googleAuthoriser) {
             });
     });
 
+    app.post("/admin/limit", function(req, res) {
+        var limit = +req.body.limit;
+        tweetSearcher.setLimit(limit);
+        res.send(201);
+    });
+
     app.get("/api/tweets", function(req, res) {
         res.json(getTweets());
     });
