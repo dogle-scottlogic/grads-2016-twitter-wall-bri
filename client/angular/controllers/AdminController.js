@@ -8,10 +8,11 @@
         "$sce",
         "$routeParams",
         "$interval",
+        "$timeout"
     ];
 
     function AdminController(
-        $scope, adminDashDataService, $sce, $routeParams, $interval
+        $scope, adminDashDataService, $sce, $routeParams, $interval, $timeout
     ) {
         var vm = this;
         $scope.speakers = [];
@@ -21,6 +22,16 @@
         $scope.errorMessage = "In order to access the dash board for this Twitter Wall you must be authorised";
         $scope.blockedUsers = [];
         $scope.admins = [];
+        $scope.totalTweets = 50;
+        var setTotalTweetsTimeout;
+
+        $scope.updateTotalTweets = function(totalTweets) {
+            $scope.totalTweets = totalTweets;
+            if (setTotalTweetsTimeout) $timeout.cancel(setTotalTweetsTimeout);
+            setTotalTweetsTimeout = $timeout(function() {
+                adminDashDataService.setLimit($scope.totalTweets);
+            }, 3000);
+        };
 
         var limit = [9, 10, 10];
         $scope.getLimit = function(index) {

@@ -23,6 +23,7 @@
             setPictureDeletedStatus: setPictureDeletedStatus,
             getAdmins: getAdmins,
             addAdmin: addAdmin,
+            setLimit: setLimit,
             removeAdmin: removeAdmin,
             setApprovedTweetsOnlyStatus: setApprovedTweetsOnlyStatus,
             getApprovedTweetsOnlyStatus: getApprovedTweetsOnlyStatus
@@ -32,6 +33,16 @@
             return $http.post("/admin/tweets/hide_image", {
                 id: id,
                 deleted: deleted,
+            }, {
+                headers: {
+                    "Content-type": "application/json"
+                }
+            });
+        }
+
+        function setLimit(limit) {
+            return $http.post("/admin/limit", {
+                limit: limit
             }, {
                 headers: {
                     "Content-type": "application/json"

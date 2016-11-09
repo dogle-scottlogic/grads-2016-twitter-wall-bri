@@ -31,9 +31,6 @@
 
         $rootScope.$on("tweetAdded", function(event, data) {
             $scope.tweets.push(data);
-            // updateTweets(function() {
-            //     redisplayTweets();
-            // });
             AddnewTweet(data, function() {
                 redisplayTweets();
             });

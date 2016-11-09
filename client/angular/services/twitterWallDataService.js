@@ -7,8 +7,7 @@
 
     function twitterWallDataService($http) {
         return {
-            getTweets: getTweets,
-            updateInteractions: updateInteractions
+            getTweets: getTweets
         };
 
         function getTweets(done) {
@@ -17,17 +16,6 @@
                 params: query
             }).then(function(result) {
                 done(result.data);
-            });
-        }
-
-        function updateInteractions(visibleTweets) {
-            var query = {
-                visibleTweets: visibleTweets
-            };
-            return $http.get("/api/interactions", {
-                params: query
-            }).then(function(result) {
-                return result.data;
             });
         }
     }

@@ -1,69 +1,55 @@
 <div layout="row" layout-align="center center" style="width: 100%" class="admin-menu">
     <md-menu-bar>
         <div style="display: inline">
-            <md-switch
-            ng-model="$parent.adminView"
-            aria-label="Admin View Switch">
-            {{adminView ? "Admin view" : "User view"}}
+            <md-switch ng-model="$parent.adminView" aria-label="Admin View Switch">
+                {{adminView ? "Admin view" : "User view"}}
             </md-switch>
         </div>
         <md-menu>
-            <button
-            ng-click="$mdOpenMenu(); getBlockedUsers()"
-            class="admin-menu-button">
+            <button ng-click="$mdOpenMenu(); getBlockedUsers()" class="admin-menu-button">
             BLOCKED USERS
             </button>
             <md-menu-content>
-                <ng-include
-                src="'/templates/adminMenu/adminMenuBlockedUsers.html'">
+                <ng-include src="'/templates/adminMenu/adminMenuBlockedUsers.html'">
                 </ng-include>
             </md-menu-content>
         </md-menu>
-        
+
         <md-menu>
-            <button
-            ng-click="$mdOpenMenu()"
-            class="admin-menu-button">
+            <button ng-click="$mdOpenMenu()" class="admin-menu-button">
             SPEAKERS
             </button>
             <md-menu-content class="admin-menu-item">
-                <ng-include
-                src="'/templates/adminMenu/adminMenuSpeakers.html'">
+                <ng-include src="'/templates/adminMenu/adminMenuSpeakers.html'">
                 </ng-include>
             </md-menu-content>
         </md-menu>
-        
+
         <md-menu>
-            <button
-            ng-click="$mdOpenMenu()"
-            class="admin-menu-button">
+            <button ng-click="$mdOpenMenu()" class="admin-menu-button">
             RETWEETS
             </button>
             <md-menu-content>
-                <ng-include
-                src="'/templates/adminMenu/adminMenuRetweets.html'">
+                <ng-include src="'/templates/adminMenu/adminMenuRetweets.html'">
                 </ng-include>
             </md-menu-content>
         </md-menu>
-        
+
         <md-menu>
-            <button
-            ng-click="$mdOpenMenu()"
-            class="admin-menu-button">
+            <button ng-click="$mdOpenMenu()" class="admin-menu-button">
             ADMIN
             </button>
             <md-menu-content>
-                <ng-include
-                src="'/templates/adminMenu/adminMenuLogOut.html'">
+                <ng-include src="'/templates/adminMenu/adminMenuLogOut.html'">
                 </ng-include>
             </md-menu-content>
         </md-menu>
-        <md-checkbox 
-            ng-model="ctrl.approvedTweetsOnly" 
-            ng-change="setApprovedTweetsOnlyStatus(ctrl.approvedTweetsOnly)" 
-            class="admin-checkbox">
-                Approved tweets only
+        <md-input-container>
+            Limit total tweets to: <input aria-label="..." type="number" name="input" ng-model="totalTweets" min="1" max="100" ng-change="updateTotalTweets(totalTweets)" required>
+        </md-input-container>
+        <md-checkbox ng-model="ctrl.approvedTweetsOnly" ng-change="setApprovedTweetsOnlyStatus(ctrl.approvedTweetsOnly)" class="admin-checkbox">
+            Approved tweets only
         </md-checkbox>
     </md-menu-bar>
-    
+
 </div>
