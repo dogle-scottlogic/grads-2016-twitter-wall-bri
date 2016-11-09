@@ -332,7 +332,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
             } else {
                 tweet.full_text = tweet.text;
             }
-            socket.emit(JSON.stringify(tweet));
+            socket.emit(tweet, "tweet");
         }
     }
 

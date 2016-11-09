@@ -8,12 +8,15 @@
         var dataStream = $websocket("ws://localhost:8080");
 
         var collection = [];
-        dataStream.onMessage(function(message) {
+        dataStream.onMessage(function(incoming_package) {
             try {
-                $rootScope.$emit("tweetAdded", JSON.parse(message.data));
+                incoming_package = JSON.parse(incoming_package.data);
+                var type = incoming_package.type;
+                var message = incoming_package.message;
+                $rootScope.$emit("tweetAdded", message);
             } catch (e) {
-                if (message.data) {
-                    console.log(message.data);
+                if (incoming_package.data) {
+                    console.log(incoming_package.data);
                 } else {
                     console.log(e);
                 }

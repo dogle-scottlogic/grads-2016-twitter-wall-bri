@@ -37,8 +37,11 @@ var init = function(app) {
     return server;
 };
 
-var emit = function(message) {
-    ws.broadcast(message);
+var emit = function(message, type) {
+    ws.broadcast(JSON.stringify({
+        type: type,
+        message: message
+    }));
 }
 
 module.exports = {
