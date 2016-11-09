@@ -222,22 +222,16 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     }
 
     function addSpeaker(name) {
-        addTweetUpdate("speaker_update", {
-            screen_name: name,
-            operation: "add"
-        });
         speakers.push(name);
         writeToFile();
+        tweetSetup();
     }
 
     function removeSpeaker(name) {
         if (speakers.indexOf(name) > -1) {
-            addTweetUpdate("speaker_update", {
-                screen_name: name,
-                operation: "remove"
-            });
             speakers.splice(speakers.indexOf(name), 1);
             writeToFile();
+            tweetSetup();
         } else {
             console.log("ERROR : Speaker not found in the speakers list");
         }
@@ -266,13 +260,13 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         getAllUserTweets(function() {
             doneCount++;
             if (doneCount === 2) {
-                cb();
+                return cb();
             }
         });
         getAllHashTweets(function() {
             doneCount++;
             if (doneCount === 2) {
-                cb();
+                return cb();
             }
         });
     }
@@ -352,7 +346,8 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
                 tweet.full_text = tweet.text;
             }
             if (tweetStore.length >= limit) {
-                tweetStore.shift();
+                var removedTweet = tweetStore.shift();
+                socket.emit([removedTweet], "remove");
             }
             tweetStore.push(tweet);
             socket.emit(tweet, "tweet");
@@ -438,8 +433,11 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
 
     function setLimit(num) {
         limit = num;
+        var removed = [];
         while (tweetStore.length > limit) {
-            tweetStore.shift();
+            var removedTweet = tweetStore.shift();
+            removed.push(removedTweet);
         }
+        socket.emit(removed, "remove");
     }
 }
