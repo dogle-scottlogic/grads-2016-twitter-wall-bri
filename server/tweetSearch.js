@@ -337,6 +337,22 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         });
     }
 
+    function newTweet(tweet) {
+        var index = -1;
+        for (var i = 0; i < tweetStore.length; i++) {
+            var twt = tweetStore[i];
+            if (tweet.id_str === twt.id_str) {
+                index = idx;
+                break;
+            }
+        }
+        if (index !== -1) {
+            tweetStore[index] = tweet;
+            return true;
+        }
+        return false;
+    }
+
     function tweetReceived(tweet) {
         // send to client
         if (tweet !== undefined) {
@@ -345,12 +361,16 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
             } else {
                 tweet.full_text = tweet.text;
             }
-            if (tweetStore.length >= limit) {
-                var removedTweet = tweetStore.shift();
-                socket.emit([removedTweet.id_str], "remove");
+            if (newTweet(tweet)) {
+                if (tweetStore.length >= limit) {
+                    var removedTweet = tweetStore.shift();
+                    socket.emit([removedTweet.id_str], "remove");
+                }
+                tweetStore.push(tweet);
+                socket.emit(tweet, "tweet");
+            } else {
+                socket.emit(tweet, "update");
             }
-            tweetStore.push(tweet);
-            socket.emit(tweet, "tweet");
         }
     }
 
