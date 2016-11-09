@@ -15,17 +15,6 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
 
     var stream;
 
-    function addTweetUpdate(type, props) {
-        var newUpdate = {
-            type: type,
-            since: new Date(),
-        };
-        Object.keys(props).forEach(function(propKey) {
-            newUpdate[propKey] = props[propKey];
-        });
-        tweetUpdates.push(newUpdate);
-    }
-
     function addTweetItem(tweets, tag) {
         if (tweets.length === 0) {
             return;
@@ -140,13 +129,24 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         if (!blockedUsers.find(function(blockedUser) {
                 return blockedUser.screen_name === user.screen_name;
             })) {
-            addTweetUpdate("user_block", {
-                screen_name: user.screen_name,
-                blocked: true,
-            });
             blockedUsers.push(user);
+            removeBlockedUserTweets(user);
         } else {
             console.log("User " + user.screen_name + " already blocked");
+        }
+    }
+
+    function removeBlockedUserTweets(user) {
+        var removed = [];
+        for (var i = tweetStore.length - 1; i >= 0; i--) {
+            var tweet = tweetStore[i];
+            if (tweet.user.screen_name === user) {
+                removed.push(tweet);
+                tweetStore.splice(i, 1);
+            }
+        }
+        if (removed.length > 0) {
+            socket.emit(removed, "remove");
         }
     }
 
@@ -156,10 +156,6 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
             })) {
             return;
         }
-        addTweetUpdate("user_block", {
-            screen_name: user.screen_name,
-            blocked: false,
-        });
         blockedUsers = blockedUsers.filter(function(usr) {
             return usr.screen_name !== user.screen_name;
         });
@@ -370,7 +366,11 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
 
     function tweetReceived(tweet) {
         // send to client
-        if (tweet !== undefined) {
+        var valid = blockedUsers.every(function(user) {
+            return user !== tweer.user.screen_name;
+        });
+        console.log("Valid: " + valid);
+        if (tweet !== undefined && valid) {
             tweet = setFullText(tweet);
             if (tracking(tweet)) {
                 if (newTweet(tweet)) {
@@ -465,9 +465,22 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         }
         getInitialTweets(function() {
             sortTweets();
+            validateTweets();
             createStream();
             cb();
         });
+    }
+
+    function validateTweets() {
+        for (var i = tweetStore.length; i >= 0; i--) {
+            var tweet = tweetStore[i];
+            var blocked = blockedUsers.some(function(user) {
+                return user === tweet.user.screen_name;
+            });
+            if (blocked) {
+                tweetStore.splice(i, 1);
+            }
+        }
     }
 
     function setLimit(num) {
@@ -477,6 +490,8 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
             var removedTweet = tweetStore.shift();
             removed.push(removedTweet.id_str);
         }
-        socket.emit(removed, "remove");
+        if (removed.length > 0) {
+            socket.emit(removed, "remove");
+        }
     }
 }
