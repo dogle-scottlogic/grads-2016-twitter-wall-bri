@@ -13,7 +13,16 @@
                 incoming_package = JSON.parse(incoming_package.data);
                 var type = incoming_package.type;
                 var message = incoming_package.message;
-                $rootScope.$emit("tweetAdded", message);
+                switch (type) {
+                    case "tweet":
+                        $rootScope.$emit("tweetAdded", message);
+                        break;
+                    case "remove":
+                        $rootScope.$emit("removeTweets", message);
+                        break;
+                    default:
+                        console.log("no type found");
+                }
             } catch (e) {
                 if (incoming_package.data) {
                     console.log(incoming_package.data);

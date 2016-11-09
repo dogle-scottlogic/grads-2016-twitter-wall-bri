@@ -36,6 +36,21 @@
             });
         });
 
+        $rootScope.$on("removeTweet", function(event, data) {
+            var removed = false;
+            for (var i = 0; i < data.length; i++) {
+                for (var j = 0; j < $scope.tweets; j++) {
+                    if ($scope.tweets[j] === data[i]) {
+                        $scope.tweets = $scope.tweets.splice(j, 1);
+                        removed = true;
+                    }
+                }
+            }
+            if (removed) {
+                redisplayTweets();
+            }
+        });
+
         var vm = this;
 
         $scope.isMobileClient = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
