@@ -110,7 +110,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
 
     // load all tracked items
     readTextFile(eventConfigFile, function() {
-        tweetSetup();
+        tweetSetup(function() {});
     });
 
     return {
@@ -201,16 +201,18 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     function addSpeaker(name) {
         speakers.push(name);
         writeToFile();
-        tweetSetup();
-        socket.clientReload();
+        tweetSetup(function() {
+            socket.clientReload();
+        });
     }
 
     function removeSpeaker(name) {
         if (speakers.indexOf(name) > -1) {
             speakers.splice(speakers.indexOf(name), 1);
             writeToFile();
-            tweetSetup();
-            socket.clientReload();
+            tweetSetup(function() {
+                socket.clientReload();
+            });
         } else {
             console.log("ERROR : Speaker not found in the speakers list");
         }
@@ -457,13 +459,14 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         }
     }
 
-    function tweetSetup() {
+    function tweetSetup(cb) {
         if (stream) {
             stream.destroy();
         }
         getInitialTweets(function() {
             sortTweets();
             createStream();
+            cb();
         });
     }
 

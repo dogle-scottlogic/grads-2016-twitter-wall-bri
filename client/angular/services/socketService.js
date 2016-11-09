@@ -23,6 +23,8 @@
                     case "update":
                         $rootScope.$emit("updateTweet", message);
                         break;
+                    case "reload":
+                        $rootScope.$emit("reload");
                     default:
                         console.log("no type found");
                 }

@@ -44,7 +44,7 @@ var emit = function(message, type) {
     }));
 }
 
-var clientReload() {
+var clientReload = function() {
     emit("", "reload");
 };
 
