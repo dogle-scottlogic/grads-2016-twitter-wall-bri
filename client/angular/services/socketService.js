@@ -20,6 +20,9 @@
                     case "remove":
                         $rootScope.$emit("removeTweet", message);
                         break;
+                    case "update":
+                        $rootScope.$emit("updateTweet", message);
+                        break;
                     default:
                         console.log("no type found");
                 }
