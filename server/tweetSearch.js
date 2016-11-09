@@ -202,6 +202,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         speakers.push(name);
         writeToFile();
         tweetSetup();
+        socket.clientReload();
     }
 
     function removeSpeaker(name) {
@@ -209,6 +210,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
             speakers.splice(speakers.indexOf(name), 1);
             writeToFile();
             tweetSetup();
+            socket.clientReload();
         } else {
             console.log("ERROR : Speaker not found in the speakers list");
         }

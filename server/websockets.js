@@ -44,7 +44,12 @@ var emit = function(message, type) {
     }));
 }
 
+var clientReload() {
+    emit("", "reload");
+};
+
 module.exports = {
     init: init,
-    emit: emit
+    emit: emit,
+    clientReload: clientReload
 };
