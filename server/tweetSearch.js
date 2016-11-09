@@ -132,10 +132,10 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
 
     // load all tracked items
     readTextFile(eventConfigFile, function() {
-        // do initial REST API call
-        getInitialTweets();
-        // setup stream
-        createStream();
+        getInitialTweets(function() {
+            sortTweets();
+            createStream();
+        });
     });
 
     return {
@@ -261,17 +261,33 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         return speakers;
     }
 
-    function getInitialTweets() {
+    function getInitialTweets(cb) {
         tweetStore = [];
-        getAllUserTweets();
-        getAllHashTweets();
+        var doneCount = 0;
+        getAllUserTweets(function() {
+            doneCount++;
+            if (doneCount === 2) {
+                cb();
+            }
+        });
+        getAllHashTweets(function() {
+            doneCount++;
+            if (doneCount === 2) {
+                cb();
+            }
+        });
     }
 
-    function getAllUserTweets() {
+    function getAllUserTweets(cb) {
         var all = speakers.concat(mentions);
+        var doneCount = 0;
         all.forEach(function(user) {
-            getUserTweets(user, 10, function(tweets) {
+            getUserTweets(user, 5, function(tweets) {
                 tweetStore = tweetStore.concat(tweets);
+                doneCount++;
+                if (doneCount === all.length) {
+                    cb();
+                }
             });
         });
     }
@@ -287,10 +303,11 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         });
     }
 
-    function getAllHashTweets() {
+    function getAllHashTweets(cb) {
         var query = hashtags.join(" OR ");
         getHashTweets(query, 30, function(tweets) {
             tweetStore = tweetStore.concat(tweets.statuses);
+            cb();
         });
     }
 
@@ -332,6 +349,8 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
             } else {
                 tweet.full_text = tweet.text;
             }
+            tweetStore.shift();
+            tweetStore.push(tweet);
             socket.emit(JSON.stringify(tweet));
         }
     }
@@ -383,5 +402,18 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
                 }
             }
         });
+    }
+
+    function sortTweets() {
+        var parseTwitterDate = function(text) {
+            return new Date(Date.parse(text.replace(/( +)/, " UTC$1")));
+        };
+        var mills = Date.parse(parseTwitterDate(tweetStore[0].created_at));
+        var sort = function(a, b) {
+            var aMills = Date.parse(parseTwitterDate(a.created_at));
+            var bMills = Date.parse(parseTwitterDate(b.created_at));
+            return aMills - bMills;
+        };
+        tweetStore.sort(sort);
     }
 }
