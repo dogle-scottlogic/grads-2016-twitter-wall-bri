@@ -132,10 +132,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
 
     // load all tracked items
     readTextFile(eventConfigFile, function() {
-        getInitialTweets(function() {
-            sortTweets();
-            createStream();
-        });
+        tweetSetup();
     });
 
     return {
@@ -338,6 +335,9 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
             stream.on("error", function(error) {
                 console.log("Streaming error:\n\t" + error);
             });
+            stream.on("end", function() {
+                console.log("Stream ended");
+            });
         });
     }
 
@@ -372,6 +372,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     }
 
     function getUserIDs(done) {
+        userIDs = [];
         var all = speakers.concat(mentions);
         var completed = 0;
         for (var i = 0; i < all.length; i++) {
@@ -415,5 +416,15 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
             return aMills - bMills;
         };
         tweetStore.sort(sort);
+    }
+
+    function tweetSetup() {
+        if (stream) {
+            stream.destroy();
+        }
+        getInitialTweets(function() {
+            sortTweets();
+            createStream();
+        });
     }
 }
