@@ -56,6 +56,7 @@
         });
 
         $rootScope.$on("updateTweet", function(event, data) {
+            data.displayText = $sce.trustAsHtml(tweetTextManipulationService.getDisplayText(data));
             changedTweets[data.id_str] = data;
             onContentChanged();
             redisplayTweets();
@@ -395,12 +396,15 @@
             var changedTweetsArr = Object.keys(changedTweets).map(function(key) {
                 return changedTweets[key];
             });
+            if (changedTweetsArr.length === 0) {
+                changedTweetsArr = tweets;
+            }
             var clientDisplayColumns;
-            // changedTweets = {};
+            changedTweets = {};
             for (var tweetViewName in tweetViews) {
                 var tweetView = tweetViews[tweetViewName];
                 var viewDisplayColumns = columnAssignmentService.assignDisplayColumns(
-                    tweets, tweetView.columnDataList, tweetView.backfill, tweetView.showAllImages, tweetViewName
+                    changedTweetsArr, tweetView.columnDataList, tweetView.backfill, tweetView.showAllImages, tweetViewName
                 );
                 if (tweetViewName === getCurrentTweetView()) {
                     displayColumns = viewDisplayColumns;

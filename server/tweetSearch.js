@@ -15,29 +15,6 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
 
     var stream;
 
-    function tweetType(tweet) {
-        if (tweet.user.screen_name === officialUser) {
-            return "official";
-        }
-        var foundHashtag = hashtags.reduce(function(found, hashtag) {
-            return found || tweet.entities.hashtags.reduce(function(match, tweetHashtag) {
-                return match || hashtag.slice(1).toUpperCase() === tweetHashtag.text.toUpperCase();
-            }, false);
-        }, false);
-        if (foundHashtag) {
-            return "tagged";
-        }
-        var foundMention = mentions.reduce(function(found, mention) {
-            return found || tweet.entities.user_mentions.reduce(function(match, userMention) {
-                return match || mention.slice(1).toUpperCase() === userMention.screen_name.toUpperCase();
-            }, false);
-        }, false);
-        if (foundMention) {
-            return "tagged";
-        }
-        return "";
-    }
-
     function addTweetUpdate(type, props) {
         var newUpdate = {
             type: type,
@@ -337,39 +314,76 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         });
     }
 
-    function newTweet(tweet) {
-        var index = -1;
-        for (var i = 0; i < tweetStore.length; i++) {
-            var twt = tweetStore[i];
-            if (tweet.id_str === twt.id_str) {
-                index = idx;
-                break;
-            }
+    function tracking(tweet) {
+        if (!tweet) {
+            return false;
         }
-        if (index !== -1) {
-            tweetStore[index] = tweet;
+        var userTweet = mentions.some(function(user) {
+            return user === tweet.user.screen_name;
+        });
+        var speakerTweet = speakers.some(function(user) {
+            return user === tweet.user.screen_name;
+        });
+        var hashTweet = hashtags.some(function(hashtag) {
+            var tags = tweet.entities.hashtags;
+            return tags.some(function(tag) {
+                return tag === hashtag;
+            });
+        });
+        if (userTweet || speakerTweet || hashTweet) {
             return true;
         }
         return false;
     }
 
+    function newTweet(tweet) {
+        var index = -1;
+        if (tweet.retweeted_status) {
+            var reTweet = tweet.retweeted_status;
+            for (var i = 0; i < tweetStore.length; i++) {
+                var twt = tweetStore[i];
+                if (reTweet.id_str === twt.id_str) {
+                    index = i;
+                    break;
+                }
+            }
+            if (index !== -1) {
+                tweetStore[index] = reTweet;
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function setFullText(tweet) {
+        if (tweet.truncated && tweet.extended_tweet !== undefined) {
+            tweet.full_text = tweet.extended_tweet.full_text;
+        } else {
+            tweet.full_text = tweet.text;
+        }
+        return tweet;
+    }
+
     function tweetReceived(tweet) {
         // send to client
         if (tweet !== undefined) {
-            if (tweet.truncated && tweet.extended_tweet !== undefined) {
-                tweet.full_text = tweet.extended_tweet.full_text;
-            } else {
-                tweet.full_text = tweet.text;
-            }
-            if (newTweet(tweet)) {
-                if (tweetStore.length >= limit) {
-                    var removedTweet = tweetStore.shift();
-                    socket.emit([removedTweet.id_str], "remove");
+            tweet = setFullText(tweet);
+            if (tracking(tweet)) {
+                if (newTweet(tweet)) {
+                    if (tweetStore.length >= limit) {
+                        var removedTweet = tweetStore.shift();
+                        socket.emit([removedTweet.id_str], "remove");
+                    }
+                    tweetStore.push(tweet);
+                    socket.emit(tweet, "tweet");
+                } else {
+                    socket.emit(tweet, "update");
                 }
-                tweetStore.push(tweet);
-                socket.emit(tweet, "tweet");
-            } else {
-                socket.emit(tweet, "update");
+            } else if (tracking(tweet.retweeted_status)) {
+                if (!newTweet(tweet)) {
+                    tweet.retweeted_status = setFullText(tweet.retweeted_status);
+                    socket.emit(tweet.retweeted_status, "update");
+                }
             }
         }
     }
