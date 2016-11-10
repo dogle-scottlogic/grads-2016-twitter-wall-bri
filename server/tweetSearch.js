@@ -50,30 +50,30 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         }
     }
 
-    function setTweetStatus(tweetId, status) {
-        var modifiedTweet = findLast(tweetStore, function(tweet) {
-            return tweet.id_str === tweetId;
+    function getTweet(id) {
+        var tweet = findLast(tweetStore, function(twt) {
+            return twt.id_str === id;
         });
-        if (!modifiedTweet) {
+        if (!tweet) {
             throw new Error("Cannot modify tweet that the server does not have.");
         }
-        // Ignore the update if everything in `status` is already set for the tweet
-        addTweetUpdate("tweet_status", {
-            id: tweetId,
-            status: status,
-        });
+        return tweet;
     }
 
-    function setDeletedStatus(tweetId, deleted) {
-        setTweetStatus(tweetId, {
-            deleted: deleted
+    function setDeletedStatus(ids, deleted) {
+        var updated = [];
+        ids.forEach(function(id) {
+            var tweet = getTweet(id);
+            tweet.deleted = deleted;
+            updated.push(tweet);
         });
+        socket.emit(updated, "update");
     }
 
     function setPinnedStatus(tweetId, pinned) {
-        setTweetStatus(tweetId, {
-            pinned: pinned
-        });
+        var tweet = getTweet(tweetId);
+        tweet.pinned = pinned;
+        socket.emit([tweet], "update");
     }
 
     var searchUpdater;
@@ -163,9 +163,9 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     }
 
     function displayBlockedTweet(tweetId) {
-        setTweetStatus(tweetId, {
-            display: true
-        });
+        var tweet = getTweet(tweetId);
+        tweet.display = true;
+        socket.emit([tweet], "update");
     }
 
     function setRetweetDisplayStatus(status) {
@@ -190,9 +190,9 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     }
 
     function setTweetImageHidden(tweetId, hidden) {
-        setTweetStatus(tweetId, {
-            hide_image: hidden
-        });
+        var tweet = getTweet(tweetId);
+        tweet.hide_image = hidden;
+        socket.emit([tweet], "update");
     }
 
     function loadTweets(tweets, type) {
@@ -410,12 +410,12 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
                     tweetStore.push(tweet);
                     socket.emit(tweet, "tweet");
                 } else {
-                    socket.emit(tweet, "update");
+                    socket.emit([tweet], "update");
                 }
             } else if (tracking(tweet.retweeted_status)) {
                 if (!newTweet(tweet)) {
                     tweet.retweeted_status = setFullText(tweet.retweeted_status);
-                    socket.emit(tweet.retweeted_status, "update");
+                    socket.emit([tweet.retweeted_status], "update");
                 }
             }
         }
