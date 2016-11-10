@@ -32,6 +32,10 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         }
     }
 
+    function getLimit() {
+        return limit;
+    }
+
     function setApprovalMode(approveTweets) {
         inApprovalMode = approveTweets;
     }
@@ -120,6 +124,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         setApprovalMode: setApprovalMode,
         getApprovalMode: getApprovalMode,
         setLimit: setLimit,
+        getLimit: getLimit
     };
 
     function getBlockedUsers() {

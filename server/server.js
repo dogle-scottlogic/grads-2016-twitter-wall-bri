@@ -197,6 +197,10 @@ module.exports = function(port, tweetSearcher, googleAuthoriser) {
             });
     });
 
+    app.get("/admin/limit", function(req, res) {
+        res.json(tweetSearcher.getLimit());
+    });
+
     app.post("/admin/limit", function(req, res) {
         var limit = +req.body.limit;
         tweetSearcher.setLimit(limit);

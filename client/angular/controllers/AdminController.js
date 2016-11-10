@@ -119,6 +119,9 @@
 
         function activate() {
             adminDashDataService.authenticate().then(function() {
+                adminDashDataService.getLimit(function(result) {
+                    $scope.totalTweets = result;
+                });
                 adminDashDataService.getSpeakers().then(function(speakers) {
                     $scope.speakers = speakers;
                 }).catch(function(err) {
