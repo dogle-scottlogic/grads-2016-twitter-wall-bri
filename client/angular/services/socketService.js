@@ -25,6 +25,7 @@
                         break;
                     case "reload":
                         $rootScope.$emit("reload");
+                        break;
                     default:
                         console.log("no type found");
                 }

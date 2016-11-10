@@ -531,14 +531,23 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     }
 
     function setLimit(num) {
-        limit = num;
-        var removed = [];
-        while (tweetStore.length > limit) {
-            var removedTweet = tweetStore.shift();
-            removed.push(removedTweet.id_str);
-        }
-        if (removed.length > 0) {
-            socket.emit(removed, "remove");
+        if (num > limit) {
+            limit = num;
+            getInitialTweets(function() {
+                sortTweets();
+                validateTweets();
+                socket.clientReload();
+            });
+        } else {
+            limit = num;
+            var removed = [];
+            while (tweetStore.length > limit) {
+                var removedTweet = tweetStore.shift();
+                removed.push(removedTweet.id_str);
+            }
+            if (removed.length > 0) {
+                socket.emit(removed, "remove");
+            }
         }
     }
 }
