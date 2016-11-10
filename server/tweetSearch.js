@@ -61,7 +61,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
 
     function setDeletedStatus(tweetId, deleted) {
         var tweet = getTweet(tweetId);
-        tweet.pinned = true;
+        tweet.deleted = deleted;
         socket.emit(tweet, "update");
     }
 
