@@ -260,6 +260,9 @@
                 if (results.tweets.length > 0) {
                     results.tweets.forEach(function(tweet) {
                         tweet.displayText = $sce.trustAsHtml(tweetTextManipulationService.getDisplayText(tweet));
+                        if(tweet.retweeted_status) {
+                            console.log(tweet);
+                        }
                     });
                     newTweets = $scope.setFlagsForTweets(results.tweets, vm.updates);
                 }

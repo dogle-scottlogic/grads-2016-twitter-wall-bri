@@ -12,6 +12,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     var officialUser;
     var inApprovalMode = false;
     var limit = 50;
+    var retweet_status = "all";
 
     var stream;
 
@@ -168,9 +169,24 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     }
 
     function setRetweetDisplayStatus(status) {
-        addTweetUpdate("retweet_display", {
-            status: status
-        });
+        retweet_status = status;
+        switch (status) {
+            case "all":
+                // set deleted false
+                break;
+            case "none":
+                // set deleted true
+                break;
+            case "bristech_only":
+                console.log(status);
+                break;
+            default:
+                console.log("not a valid status");
+        }
+    }
+
+    function removeRetweets() {
+        socket.emit(getRetweetIds(tweetStore), "remove");
     }
 
     function setTweetImageHidden(tweetId, hidden) {
@@ -246,6 +262,16 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
                 return cb();
             }
         });
+    }
+
+    function getRetweetIds(tweets, filter) {
+        var retweetIds = [];
+        tweets.forEach(function(tweet) {
+            if ((!filter && tweet.retweeted_status) || (filter && tweet.retweeted_status && tweet.user.name === filter)) {
+                retweetIds.push(tweet.id_str);
+            }
+        });
+        return retweetIds;
     }
 
     function getAllUserTweets(cb) {
