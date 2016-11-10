@@ -12,16 +12,16 @@
     </div>
   </div>
   <md-content ng-if="!isMobileClient" layout="row" class="container">
-      <ng-include 
-      flex 
-      src="'/templates/tweetColumn.html'" 
-      ng-repeat="displayColumn in displayColumns track by $index" 
+      <ng-include
+      flex
+      src="'/templates/tweetColumn.html'"
+      ng-repeat="displayColumn in displayColumns track by $index"
       ng-init="colIndex = $index">
       </ng-include>
   </md-content>
   <md-content ng-if="isMobileClient" class= "container">
     <div ng-style="getLogoBoxDimensions()" class="logo-box">
-      <img src="../assets/Bristech-Logo.png" ng-style="getLogoDimensions()" />
+      <img src="../assets/Bristech-Mark-with-Date-Circle-Pink.png" ng-style="getLogoDimensions()" />
       <div ng-style="getMessageBoxDimensions()">
         Get involved:</br>
         tweet with </br>
@@ -39,4 +39,3 @@
     </div>
   </md-content>
 </md-content>
-
