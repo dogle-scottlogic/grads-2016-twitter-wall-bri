@@ -57,15 +57,38 @@
 
         $rootScope.$on("updateTweet", function(event, tweets) {
             tweets.forEach(function(data) {
-                data.displayText = $sce.trustAsHtml(tweetTextManipulationService.getDisplayText(data));
-                if (data.pinned && !data.pinTime) {
-                    data.pinTime = new Date();
-                }
-                changedTweets[data.id_str] = data;
+                $scope.tweets.some(function(tweet) {
+                    if (tweet.id_str === data.id_str) {
+                        updateStatusAttributes(tweet, data);
+                        if (tweet.pinned && !tweet.pinTime) {
+                            tweet.pinTime = new Date();
+                        }
+                        changedTweets[tweet.id_str] = tweet;
+                        return true;
+                    }
+                    return false;
+                });
             });
             onContentChanged();
             redisplayTweets();
         });
+
+        function updateStatusAttributes(oldTweet, newTweet) {
+            oldTweet.retweet_count = newTweet.retweet_count;
+            oldTweet.favorite_count = newTweet.favorite_count;
+            if (newTweet.pinned !== undefined) {
+                oldTweet.pinned = newTweet.pinned;
+            }
+            if (newTweet.deleted !== undefined) {
+                oldTweet.deleted = newTweet.deleted;
+            }
+            if (newTweet.hide_image !== undefined) {
+                oldTweet.hide_image = newTweet.hide_image;
+            }
+            if (newTweet.display !== undefined) {
+                oldTweet.display = newTweet.display;
+            }
+        }
 
         $rootScope.$on("reload", function(event) {
             columnAssignmentService.clearStore("admin");
@@ -266,13 +289,12 @@
                     results.tweets.forEach(function(tweet) {
                         tweet.displayText = $sce.trustAsHtml(tweetTextManipulationService.getDisplayText(tweet));
                     });
-                    newTweets = $scope.setFlagsForTweets(results.tweets, vm.updates);
+                    newTweets = results.tweets;
                 }
-                $scope.tweets = newTweets;
                 newTweets.forEach(function(newTweet) {
                     changedTweets[newTweet.id_str] = newTweet;
                 });
-                $scope.tweets = $scope.setFlagsForTweets($scope.tweets, results.updates);
+                $scope.tweets = newTweets;
                 onContentChanged();
                 done();
             });
@@ -373,19 +395,6 @@
             };
         };
 
-        function updateInteractions() {
-            var visibleTweets = [];
-            $scope.displayColumns.forEach(function(column) {
-                column.forEach(function(tweet) {
-                    visibleTweets.push({
-                        id_str: tweet.id_str,
-                        favorite_count: tweet.favorite_count,
-                        retweet_count: tweet.retweet_count
-                    });
-                });
-            });
-        }
-
         function displayTweets(tweets) {
             var displayColumns;
             var changedTweetsArr = Object.keys(changedTweets).map(function(key) {
@@ -413,74 +422,6 @@
                 return prevColumn.concat(curColumn);
             }));
         }
-
-        $scope.setFlagsForTweets = function(tweets, updates) {
-            updates.forEach(function(update) {
-                // Pinned tweets
-                if (update.type === "tweet_status") {
-                    var updatedTweet = tweets.find(function(tweet) {
-                        return tweet.id_str === update.id;
-                    });
-                    if (updatedTweet) {
-                        for (var prop in update.status) {
-                            updatedTweet[prop] = update.status[prop];
-                        }
-                        if (update.status.pinned) {
-                            updatedTweet.pinTime = new Date(update.since);
-                        }
-                        changedTweets[updatedTweet.id_str] = updatedTweet;
-                    }
-
-                    // Blocked users
-                } else if (update.type === "user_block") {
-                    tweets.forEach(function(tweet) {
-                        if (tweet.user.screen_name === update.screen_name) {
-                            tweet.blocked = update.blocked;
-                            changedTweets[tweet.id_str] = tweet;
-                        }
-                    });
-
-                    // speaker tagging
-                } else if (update.type === "speaker_update") {
-                    var wallPriority;
-                    if (update.operation === "add") {
-                        wallPriority = true;
-                    } else if (update.operation === "remove") {
-                        wallPriority = false;
-                    }
-                    tweets.forEach(function(tweet) {
-                        if (tweet.user.screen_name === update.screen_name) {
-                            tweet.wallPriority = wallPriority;
-                            changedTweets[tweet.id_str] = tweet;
-                        }
-                        return tweet;
-                    });
-                    //retweet display options
-                } else if (update.type === "retweet_display") {
-                    tweets.forEach(function(tweet) {
-                        var initialHiddenStatus = tweet.hide_retweet;
-                        switch (update.status) {
-                            case "all":
-                                tweet.hide_retweet = false;
-                                break;
-                            case "bristech_only":
-                                tweet.hide_retweet = (tweet.retweeted_status && (tweet.user.screen_name !== "bristech")) ? true : false;
-                                break;
-                            case "none":
-                                tweet.hide_retweet = tweet.retweeted_status ? true : false;
-                                break;
-                            default:
-                                tweet.hide_retweet = false;
-                                break;
-                        }
-                        if (tweet.hide_retweet !== initialHiddenStatus) {
-                            changedTweets[tweet.id_str] = tweet;
-                        }
-                    });
-                }
-            });
-            return tweets;
-        };
 
         function calcTweetSizeStyles() {
             var tweetStyles = [];

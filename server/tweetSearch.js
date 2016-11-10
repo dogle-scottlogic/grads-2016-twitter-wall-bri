@@ -356,8 +356,9 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         });
         var hashTweet = hashtags.some(function(hashtag) {
             var tags = tweet.entities.hashtags;
+            var hash = hashtag.charAt(0) === "#" ? hashtag.slice(1) : hashtag;
             return tags.some(function(tag) {
-                return tag === hashtag;
+                return tag.text.toUpperCase() === hash.toUpperCase();
             });
         });
         if (userTweet || speakerTweet || hashTweet) {
@@ -397,7 +398,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     function tweetReceived(tweet) {
         // send to client
         var valid = blockedUsers.every(function(user) {
-            return user !== tweer.user.screen_name;
+            return user !== tweet.user.screen_name;
         });
         if (tweet !== undefined && valid) {
             tweet = setFullText(tweet);
@@ -408,6 +409,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
                         socket.emit([removedTweet.id_str], "remove");
                     }
                     checkRetweet(tweet);
+                    checkApproved(tweet);
                     tweetStore.push(tweet);
                     socket.emit(tweet, "tweet");
                 } else {
@@ -419,6 +421,12 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
                     socket.emit([tweet.retweeted_status], "update");
                 }
             }
+        }
+    }
+
+    function checkApproved(tweet) {
+        if (inApprovalMode) {
+            tweet.deleted = true;
         }
     }
 
