@@ -158,9 +158,9 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     }
 
     function displayBlockedTweet(tweetId) {
-        setTweetStatus(tweetId, {
-            display: true
-        });
+        var tweet = getTweet(tweetId);
+        tweet.display = true;
+        socket.emit(tweet, "update");
     }
 
     function setRetweetDisplayStatus(status) {
@@ -170,9 +170,9 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     }
 
     function setTweetImageHidden(tweetId, hidden) {
-        setTweetStatus(tweetId, {
-            hide_image: hidden
-        });
+        var tweet = getTweet(tweetId);
+        tweet.hide_image = hidden;
+        socket.emit(tweet, "update");
     }
 
     function loadTweets(tweets, type) {
