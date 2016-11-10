@@ -172,21 +172,17 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         retweet_status = status;
         switch (status) {
             case "all":
-                // set deleted false
+                setDeletedStatus(getRetweetIds(tweetStore), false);
                 break;
             case "none":
-                // set deleted true
+                setDeletedStatus(getRetweetIds(tweetStore), true);
                 break;
             case "bristech_only":
-                console.log(status);
+                setDeletedStatus(getRetweetIds(tweetStore, "bristech"), true);
                 break;
             default:
                 console.log("not a valid status");
         }
-    }
-
-    function removeRetweets() {
-        socket.emit(getRetweetIds(tweetStore), "remove");
     }
 
     function setTweetImageHidden(tweetId, hidden) {
@@ -267,7 +263,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     function getRetweetIds(tweets, filter) {
         var retweetIds = [];
         tweets.forEach(function(tweet) {
-            if ((!filter && tweet.retweeted_status) || (filter && tweet.retweeted_status && tweet.user.name === filter)) {
+            if ((!filter && tweet.retweeted_status) || (filter && tweet.retweeted_status && tweet.user.screen_name !== filter)) {
                 retweetIds.push(tweet.id_str);
             }
         });
@@ -398,7 +394,6 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         var valid = blockedUsers.every(function(user) {
             return user !== tweer.user.screen_name;
         });
-        console.log("Valid: " + valid);
         if (tweet !== undefined && valid) {
             tweet = setFullText(tweet);
             if (tracking(tweet)) {
@@ -407,6 +402,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
                         var removedTweet = tweetStore.shift();
                         socket.emit([removedTweet.id_str], "remove");
                     }
+                    checkRetweet(tweet);
                     tweetStore.push(tweet);
                     socket.emit(tweet, "tweet");
                 } else {
@@ -418,6 +414,15 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
                     socket.emit([tweet.retweeted_status], "update");
                 }
             }
+        }
+    }
+
+    function checkRetweet(tweet) {
+        if (retweet_status === "none" && tweet.retweeted_status) {
+            return tweet.deleted = true;
+        }
+        if (retweet_status === "bristech_only" && tweet.retweeted_status && tweet.user.screen_name !== "bristech") {
+            return tweet.deleted = true;
         }
     }
 
