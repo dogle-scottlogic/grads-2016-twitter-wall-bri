@@ -1,18 +1,18 @@
-<a 
+<a
     ng-bind-html="tweet.displayText"
-    ng-href="http://twitter.com/tweets/status/{{tweet.id_str}}" 
+    ng-href="http://twitter.com/tweets/status/{{tweet.id_str}}"
     expanding-text
     class="tweet-text">
 </a>
 
-<img 
-    class="md-media-sm tweet-media" 
-    ng-if="showTweetImage(tweet)" 
-    ng-src="{{tweet.entities.media[0].media_url_https}}" 
+<img
+    class="md-media-sm tweet-media"
+    ng-if="showTweetImage(tweet)"
+    ng-src="{{tweet.entities.media[0].media_url_https}}"
     ng-class="{disabled: tweet.hide_image}" />
 
-<md-button 
-	class="md-icon-button delete-image-button-container" 
+<md-button
+	class="md-icon-button delete-image-button-container"
 	ng-if="showTweetImage(tweet) && loggedIn && !tweet.hide_image"
 	ng-click="setPictureDeletedStatus(tweet.id_str, true)">
 	    <md-icon >

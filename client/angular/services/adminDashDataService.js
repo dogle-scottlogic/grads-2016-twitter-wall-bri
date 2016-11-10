@@ -24,6 +24,7 @@
             getAdmins: getAdmins,
             addAdmin: addAdmin,
             setLimit: setLimit,
+            getLimit: getLimit,
             removeAdmin: removeAdmin,
             setApprovedTweetsOnlyStatus: setApprovedTweetsOnlyStatus,
             getApprovedTweetsOnlyStatus: getApprovedTweetsOnlyStatus
@@ -37,6 +38,12 @@
                 headers: {
                     "Content-type": "application/json"
                 }
+            });
+        }
+
+        function getLimit(done) {
+            return $http.get("/admin/limit").then(function(result) {
+                done(result.data);
             });
         }
 
