@@ -1,4 +1,4 @@
-var WebSocketServer = require('ws').Server
+var WebSocketServer = require("ws").Server;
 var http = require("http");
 
 var ws = null;
@@ -19,13 +19,13 @@ var init = function(app) {
         });
     };
 
-    wss.on('connection', function connection(webs) {
-        webs.on('message', function incoming(message) {
-            console.log('received: %s', message);
+    wss.on("connection", function connection(webs) {
+        webs.on("message", function incoming(message) {
+            console.log("received: %s", message);
         });
 
-        webs.on('close', function close() {
-            console.log('disconnected');
+        webs.on("close", function close() {
+            console.log("disconnected");
         });
         webs.on("error", function(err) {
             console.log("error " + err);
@@ -42,7 +42,7 @@ var emit = function(message, type) {
         type: type,
         message: message
     }));
-}
+};
 
 var clientReload = function() {
     emit("", "reload");

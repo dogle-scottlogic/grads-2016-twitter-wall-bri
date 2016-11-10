@@ -11,7 +11,7 @@ module.exports = function(port, tweetSearcher, googleAuthoriser) {
     app.use(express.static("client"));
     app.use(cookieParser());
     app.use(bodyParser.json());
-    app.use('/socket', express.static(__dirname + '/../node_modules/angular-websocket/dist/'));
+    app.use("/socket", express.static(__dirname + "/../node_modules/angular-websocket/dist/"));
 
     var server = ws.init(app);
 

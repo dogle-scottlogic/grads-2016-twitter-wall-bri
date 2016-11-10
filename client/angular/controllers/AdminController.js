@@ -22,13 +22,15 @@
         $scope.errorMessage = "In order to access the dash board for this Twitter Wall you must be authorised";
         $scope.blockedUsers = [];
         $scope.admins = [];
-        $scope.retweet_status = 'all';
+        $scope.retweet_status = "all";
         $scope.totalTweets = 50;
         var setTotalTweetsTimeout;
 
         $scope.updateTotalTweets = function(totalTweets) {
             $scope.totalTweets = totalTweets;
-            if (setTotalTweetsTimeout) $timeout.cancel(setTotalTweetsTimeout);
+            if (setTotalTweetsTimeout) {
+                $timeout.cancel(setTotalTweetsTimeout);
+            }
             setTotalTweetsTimeout = $timeout(function() {
                 adminDashDataService.setLimit($scope.totalTweets);
             }, 3000);

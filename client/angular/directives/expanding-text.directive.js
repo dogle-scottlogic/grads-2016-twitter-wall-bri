@@ -25,7 +25,7 @@
                     if (cardHeight > 70) {
                         maxHeight = Math.max(cardHeight - 100, 10 + cardHeight * 0.2);
                         var maxWidth = contentWidth - imageWidth - padding;
-                        if(maxWidth < 240) {
+                        if (maxWidth < 240) {
                             maxWidth = 240;
                         }
                         element.css("max-width", maxWidth);

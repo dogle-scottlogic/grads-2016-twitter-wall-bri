@@ -20,10 +20,6 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         if (tweets.length === 0) {
             return;
         }
-        addTweetUpdate("new_tweets", {
-            tag: tag,
-            startIdx: tweetStore.length,
-        });
         tweetStore = tweetStore.concat(tweets);
         if (inApprovalMode) {
             tweets.forEach(function(tweet) {
@@ -432,10 +428,12 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
 
     function checkRetweet(tweet) {
         if (retweet_status === "none" && tweet.retweeted_status) {
-            return tweet.deleted = true;
+            tweet.deleted = true;
+            return;
         }
         if (retweet_status === "bristech_only" && tweet.retweeted_status && tweet.user.screen_name !== "bristech") {
-            return tweet.deleted = true;
+            tweet.deleted = true;
+            return;
         }
     }
 
@@ -459,17 +457,18 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         userIDs = [];
         var all = speakers.concat(mentions);
         var completed = 0;
+        var userPush = function(err, id) {
+            if (!err) {
+                userIDs.push(id);
+            }
+            completed++;
+            if (completed === all.length) {
+                done();
+            }
+        };
         for (var i = 0; i < all.length; i++) {
             var user = all[i];
-            getUserID(user, function(err, id) {
-                if (!err) {
-                    userIDs.push(id);
-                }
-                completed++;
-                if (completed === all.length) {
-                    done();
-                }
-            });
+            getUserID(user, userPush);
         }
     }
 
@@ -483,7 +482,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
                 if (result.length > 0) {
                     cb(err, result[0].id);
                 } else {
-                    cb("No such twitter user " + username, null);
+                    cb("No such twitter user " + user, null);
                 }
             }
         });
@@ -519,11 +518,12 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     }
 
     function validateTweets() {
+        var userCompare = function(user) {
+            return user === tweet.user.screen_name;
+        };
         for (var i = tweetStore.length; i >= 0; i--) {
             var tweet = tweetStore[i];
-            var blocked = blockedUsers.some(function(user) {
-                return user === tweet.user.screen_name;
-            });
+            var blocked = blockedUsers.some(userCompare);
             if (blocked) {
                 tweetStore.splice(i, 1);
             }
@@ -550,4 +550,4 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
             }
         }
     }
-}
+};
