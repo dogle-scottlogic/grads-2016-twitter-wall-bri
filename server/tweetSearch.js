@@ -59,16 +59,20 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         return tweet;
     }
 
-    function setDeletedStatus(tweetId, deleted) {
-        var tweet = getTweet(tweetId);
-        tweet.deleted = deleted;
-        socket.emit(tweet, "update");
+    function setDeletedStatus(ids, deleted) {
+        var updated = [];
+        ids.forEach(function(id) {
+            var tweet = getTweet(id);
+            tweet.deleted = deleted;
+            updated.push(tweet);
+        });
+        socket.emit(updated, "update");
     }
 
     function setPinnedStatus(tweetId, pinned) {
         var tweet = getTweet(tweetId);
         tweet.pinned = pinned;
-        socket.emit(tweet, "update");
+        socket.emit([tweet], "update");
     }
 
     var searchUpdater;
@@ -160,7 +164,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     function displayBlockedTweet(tweetId) {
         var tweet = getTweet(tweetId);
         tweet.display = true;
-        socket.emit(tweet, "update");
+        socket.emit([tweet], "update");
     }
 
     function setRetweetDisplayStatus(status) {
@@ -172,7 +176,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     function setTweetImageHidden(tweetId, hidden) {
         var tweet = getTweet(tweetId);
         tweet.hide_image = hidden;
-        socket.emit(tweet, "update");
+        socket.emit([tweet], "update");
     }
 
     function loadTweets(tweets, type) {
@@ -380,12 +384,12 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
                     tweetStore.push(tweet);
                     socket.emit(tweet, "tweet");
                 } else {
-                    socket.emit(tweet, "update");
+                    socket.emit([tweet], "update");
                 }
             } else if (tracking(tweet.retweeted_status)) {
                 if (!newTweet(tweet)) {
                     tweet.retweeted_status = setFullText(tweet.retweeted_status);
-                    socket.emit(tweet.retweeted_status, "update");
+                    socket.emit([tweet.retweeted_status], "update");
                 }
             }
         }
