@@ -261,7 +261,6 @@
                     changedTweets[newTweet.id_str] = newTweet;
                 });
                 $scope.tweets = $scope.setFlagsForTweets($scope.tweets, results.updates);
-                //vm.updates = vm.updates.concat(results.updates);
                 onContentChanged();
                 done();
             });
@@ -373,22 +372,6 @@
                     });
                 });
             });
-            // twitterWallDataService.updateInteractions(JSON.stringify(visibleTweets)).then(function(results) {
-            //     if (results) {
-            //         results.favourites.forEach(function(favouriteUpdate) {
-            //             var updatedTweet = $scope.tweets.find(function(tweet) {
-            //                 return tweet.id_str === favouriteUpdate.id;
-            //             });
-            //             updatedTweet.favorite_count = favouriteUpdate.value;
-            //         });
-            //         results.retweets.forEach(function(retweetUpdate) {
-            //             var updatedTweet = $scope.tweets.find(function(tweet) {
-            //                 return tweet.id_str === retweetUpdate.id;
-            //             });
-            //             updatedTweet.retweet_count = retweetUpdate.value;
-            //         });
-            //     }
-            // });
         }
 
         function displayTweets(tweets) {
@@ -421,6 +404,7 @@
 
         $scope.setFlagsForTweets = function(tweets, updates) {
             updates.forEach(function(update) {
+                // Pinned tweets
                 if (update.type === "tweet_status") {
                     var updatedTweet = tweets.find(function(tweet) {
                         return tweet.id_str === update.id;
@@ -434,6 +418,8 @@
                         }
                         changedTweets[updatedTweet.id_str] = updatedTweet;
                     }
+
+                    // Blocked users
                 } else if (update.type === "user_block") {
                     tweets.forEach(function(tweet) {
                         if (tweet.user.screen_name === update.screen_name) {
@@ -441,6 +427,8 @@
                             changedTweets[tweet.id_str] = tweet;
                         }
                     });
+
+                    // speaker tagging
                 } else if (update.type === "speaker_update") {
                     var wallPriority;
                     if (update.operation === "add") {
@@ -455,6 +443,7 @@
                         }
                         return tweet;
                     });
+                    //retweet display options
                 } else if (update.type === "retweet_display") {
                     tweets.forEach(function(tweet) {
                         var initialHiddenStatus = tweet.hide_retweet;

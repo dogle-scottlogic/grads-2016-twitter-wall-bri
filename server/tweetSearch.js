@@ -253,6 +253,9 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         var doneCount = 0;
         all.forEach(function(user) {
             getUserTweets(user, 5, function(tweets) {
+                tweets.forEach(function(tweet) {
+                    tweet.wallPriority = true;
+                });
                 tweetStore = tweetStore.concat(tweets);
                 doneCount++;
                 if (doneCount === all.length) {
