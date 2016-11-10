@@ -57,15 +57,38 @@
 
         $rootScope.$on("updateTweet", function(event, tweets) {
             tweets.forEach(function(data) {
-                data.displayText = $sce.trustAsHtml(tweetTextManipulationService.getDisplayText(data));
-                if (data.pinned && !data.pinTime) {
-                    data.pinTime = new Date();
-                }
-                changedTweets[data.id_str] = data;
+                $scope.tweets.some(function(tweet) {
+                    if (tweet.id_str === data.id_str) {
+                        updateStatusAttributes(tweet, data);
+                        if (tweet.pinned && !tweet.pinTime) {
+                            tweet.pinTime = new Date();
+                        }
+                        changedTweets[tweet.id_str] = tweet;
+                        return true;
+                    }
+                    return false;
+                });
             });
             onContentChanged();
             redisplayTweets();
         });
+
+        function updateStatusAttributes(oldTweet, newTweet) {
+            oldTweet.retweet_count = newTweet.retweet_count;
+            oldTweet.favorite_count = newTweet.favorite_count;
+            if (newTweet.pinned !== undefined) {
+                oldTweet.pinned = newTweet.pinned;
+            }
+            if (newTweet.deleted !== undefined) {
+                oldTweet.deleted = newTweet.deleted;
+            }
+            if (newTweet.hide_image !== undefined) {
+                oldTweet.hide_image = newTweet.hide_image;
+            }
+            if (newTweet.display !== undefined) {
+                oldTweet.display = newTweet.display;
+            }
+        }
 
         $rootScope.$on("reload", function(event) {
             columnAssignmentService.clearStore("admin");
@@ -371,19 +394,6 @@
                 "font-size": font + "px"
             };
         };
-
-        function updateInteractions() {
-            var visibleTweets = [];
-            $scope.displayColumns.forEach(function(column) {
-                column.forEach(function(tweet) {
-                    visibleTweets.push({
-                        id_str: tweet.id_str,
-                        favorite_count: tweet.favorite_count,
-                        retweet_count: tweet.retweet_count
-                    });
-                });
-            });
-        }
 
         function displayTweets(tweets) {
             var displayColumns;

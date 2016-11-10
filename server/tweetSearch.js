@@ -393,7 +393,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
     function tweetReceived(tweet) {
         // send to client
         var valid = blockedUsers.every(function(user) {
-            return user !== tweer.user.screen_name;
+            return user !== tweet.user.screen_name;
         });
         if (tweet !== undefined && valid) {
             tweet = setFullText(tweet);

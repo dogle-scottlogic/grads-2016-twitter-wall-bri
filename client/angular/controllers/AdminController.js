@@ -132,7 +132,6 @@
                 $scope.loggedIn = true;
                 $scope.adminView = true;
                 getApprovedTweetsOnlyStatus();
-                $interval(getApprovedTweetsOnlyStatus, 500);
             }).catch(function() {
                 adminDashDataService.getAuthUri().then(function(uri) {
                     if ($routeParams.status === "unauthorised") {
