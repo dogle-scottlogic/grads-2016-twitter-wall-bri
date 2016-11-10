@@ -57,6 +57,9 @@
 
         $rootScope.$on("updateTweet", function(event, data) {
             data.displayText = $sce.trustAsHtml(tweetTextManipulationService.getDisplayText(data));
+            if (data.pinned && !data.pinTime) {
+                data.pinTime = new Date();
+            }
             changedTweets[data.id_str] = data;
             onContentChanged();
             redisplayTweets();
