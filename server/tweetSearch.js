@@ -140,8 +140,8 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
         var removed = [];
         for (var i = tweetStore.length - 1; i >= 0; i--) {
             var tweet = tweetStore[i];
-            if (tweet.user.screen_name === user) {
-                removed.push(tweet);
+            if (tweet.user.screen_name === user.screen_name) {
+                removed.push(tweet.id_str);
                 tweetStore.splice(i, 1);
             }
         }
