@@ -207,13 +207,6 @@ module.exports = function(port, tweetSearcher, googleAuthoriser) {
         res.json(getTweets());
     });
 
-    app.get("/api/interactions", function(req, res) {
-        var visibleTweets = req.query.visibleTweets;
-        tweetSearcher.updateInteractions(visibleTweets, function(error, interactionUpdates) {
-            res.json(interactionUpdates);
-        });
-    });
-
     function getTweets() {
         return tweetSearcher.getTweetData();
     }

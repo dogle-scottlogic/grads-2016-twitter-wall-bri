@@ -266,13 +266,12 @@
                     results.tweets.forEach(function(tweet) {
                         tweet.displayText = $sce.trustAsHtml(tweetTextManipulationService.getDisplayText(tweet));
                     });
-                    newTweets = $scope.setFlagsForTweets(results.tweets, vm.updates);
+                    newTweets = results.tweets;
                 }
-                $scope.tweets = newTweets;
                 newTweets.forEach(function(newTweet) {
                     changedTweets[newTweet.id_str] = newTweet;
                 });
-                $scope.tweets = $scope.setFlagsForTweets($scope.tweets, results.updates);
+                $scope.tweets = newTweets;
                 onContentChanged();
                 done();
             });
@@ -413,74 +412,6 @@
                 return prevColumn.concat(curColumn);
             }));
         }
-
-        $scope.setFlagsForTweets = function(tweets, updates) {
-            updates.forEach(function(update) {
-                // Pinned tweets
-                if (update.type === "tweet_status") {
-                    var updatedTweet = tweets.find(function(tweet) {
-                        return tweet.id_str === update.id;
-                    });
-                    if (updatedTweet) {
-                        for (var prop in update.status) {
-                            updatedTweet[prop] = update.status[prop];
-                        }
-                        if (update.status.pinned) {
-                            updatedTweet.pinTime = new Date(update.since);
-                        }
-                        changedTweets[updatedTweet.id_str] = updatedTweet;
-                    }
-
-                    // Blocked users
-                } else if (update.type === "user_block") {
-                    tweets.forEach(function(tweet) {
-                        if (tweet.user.screen_name === update.screen_name) {
-                            tweet.blocked = update.blocked;
-                            changedTweets[tweet.id_str] = tweet;
-                        }
-                    });
-
-                    // speaker tagging
-                } else if (update.type === "speaker_update") {
-                    var wallPriority;
-                    if (update.operation === "add") {
-                        wallPriority = true;
-                    } else if (update.operation === "remove") {
-                        wallPriority = false;
-                    }
-                    tweets.forEach(function(tweet) {
-                        if (tweet.user.screen_name === update.screen_name) {
-                            tweet.wallPriority = wallPriority;
-                            changedTweets[tweet.id_str] = tweet;
-                        }
-                        return tweet;
-                    });
-                    //retweet display options
-                } else if (update.type === "retweet_display") {
-                    tweets.forEach(function(tweet) {
-                        var initialHiddenStatus = tweet.hide_retweet;
-                        switch (update.status) {
-                            case "all":
-                                tweet.hide_retweet = false;
-                                break;
-                            case "bristech_only":
-                                tweet.hide_retweet = (tweet.retweeted_status && (tweet.user.screen_name !== "bristech")) ? true : false;
-                                break;
-                            case "none":
-                                tweet.hide_retweet = tweet.retweeted_status ? true : false;
-                                break;
-                            default:
-                                tweet.hide_retweet = false;
-                                break;
-                        }
-                        if (tweet.hide_retweet !== initialHiddenStatus) {
-                            changedTweets[tweet.id_str] = tweet;
-                        }
-                    });
-                }
-            });
-            return tweets;
-        };
 
         function calcTweetSizeStyles() {
             var tweetStyles = [];
