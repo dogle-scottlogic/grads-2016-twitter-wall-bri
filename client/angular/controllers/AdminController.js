@@ -22,6 +22,7 @@
         $scope.errorMessage = "In order to access the dash board for this Twitter Wall you must be authorised";
         $scope.blockedUsers = [];
         $scope.admins = [];
+        $scope.retweet_status = 'all';
         $scope.totalTweets = 50;
         var setTotalTweetsTimeout;
 
@@ -64,7 +65,10 @@
 
         $scope.displayBlockedTweet = adminDashDataService.displayBlockedTweet;
 
-        $scope.setRetweetDisplayStatus = adminDashDataService.setRetweetDisplayStatus;
+        $scope.setRetweetDisplayStatus = function(status) {
+            $scope.retweet_status = status;
+            adminDashDataService.setRetweetDisplayStatus(status);
+        };
 
         $scope.setApprovedTweetsOnlyStatus = adminDashDataService.setApprovedTweetsOnlyStatus;
 

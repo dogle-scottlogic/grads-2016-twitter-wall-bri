@@ -120,69 +120,60 @@ md-input-container {
 }
 
 /* typing animation */
-$chars: 13;
-/* number of characters*/
-$char-time: 0.3;
-/* how long to type each character in seconds*/
-$blinks: 4;
-/* number of times to blink after typing ends */
-$wait: 900;
-/* how long to wait between iterations of animation in seconds*/
+$chars: 13; /* number of characters*/
+$char-time: 0.3; /* how long to type each character in seconds*/
+$blinks: 4; /* number of times to blink after typing ends */
+$wait: 900; /* how long to wait between iterations of animation in seconds*/
 
-$text-size: 0.6 * $chars;
-/* size of text in ems*/
-$steps: ($chars + $blinks) * 2;
-/* number of steps in animation*/
-$typing-steps: $chars*2;
-/* number of steps in typing part of animation*/
-$anim-time: $steps * $char-time;
-/* time animating in seconds*/
-$p: ($anim-time * 100) / ($anim-time + $wait);
-/* percentage of time animating*/
-$step-time: $p / $steps;
-/* percentage of time per step of animation */
-$char-size: $text-size/$chars;
-/* size of single character in ems*/
+$text-size: 0.6 * $chars; /* size of text in ems*/
+$steps: ($chars + $blinks) * 2; /* number of steps in animation*/
+$typing-steps: $chars*2; /* number of steps in typing part of animation*/
+$anim-time: $steps * $char-time; /* time animating in seconds*/
+$p: ($anim-time * 100) / ($anim-time + $wait); /* percentage of time animating*/
+$step-time: $p / $steps; /* percentage of time per step of animation */
+$char-size: $text-size/$chars; /* size of single character in ems*/
+
 @keyframes typing {
-    0% {
-        border-color: transparent;
-        width: 0;
+  0% {
+    border-color: transparent;
+    width: 0em;
     }
-    @for $i from 1 to $steps + 1 {
-         @if $i % 2 == 0{
-            @if $i < $typing-steps + 1 {
-                #{$i*$step-time}% {
-                    border-color: transparent;
-                    width: ($i/2)*$char-size + 0;
-                }
-            }
-            @else {
-                #{$i*$step-time}% {
-                    border-color: transparent;
-                }
-            }
+  @for $i from 1 to $steps + 1 {
+    @if $i % 2 == 0 {
+      @if $i < $typing-steps + 1 {
+        #{$i*$step-time}% {
+          border-color: transparent;
+          width: ($i/2)*$char-size + 0em;
         }
-        @else {
-            #{$i*$step-time}% {
-                border-color: black;
-            }
+      }
+      @else {
+        #{$i*$step-time}% {
+          border-color: transparent;
         }
+      }
     }
-
-    100% {
-        border-color: transparent;
-        width: $text-size + 0;
+    @else {
+      #{$i*$step-time}% {
+        border-color: white;
+      }
     }
+  }
+  100% {
+    border-color: transparent;
+    width: $text-size + 0em;
+       }
 }
 
 .typing-anim {
-    width: $text-size + 0;
-    margin: 0 auto;
+    width: $text-size + 0em;
+    margin: 0px;
+    margin-left: auto;
+    margin-right: auto;
     font-weight: 500;
     font-family: "Courier";
-    white-space: nowrap;
-    overflow: hidden;
-    border-right: 0.1em solid transparent;
+    white-space:nowrap;
+    overflow:hidden;
+    border-right: .1em solid transparent;
     animation: typing $anim-time + $wait + 0s step-end 10s infinite;
 }
 

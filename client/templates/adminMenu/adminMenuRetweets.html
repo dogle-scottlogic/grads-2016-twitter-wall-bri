@@ -1,20 +1,17 @@
 <md-menu-item>
-    <md-button 
-        ng-click="setRetweetDisplayStatus('all')">
-            Show all
+    <md-button ng-class="{selected : retweet_status === 'all', unselected : retweet_status !== 'all'}" ng-click="setRetweetDisplayStatus('all')">
+        Show all
     </md-button>
 </md-menu-item>
 
 <md-menu-item>
-    <md-button 
-        ng-click="setRetweetDisplayStatus('none')">
-            Show none
+    <md-button ng-class="{selected : retweet_status === 'none'}" ng-click="setRetweetDisplayStatus('none')">
+        Show none
     </md-button>
 </md-menu-item>
 
- <md-menu-item>
-    <md-button 
-        ng-click="setRetweetDisplayStatus('bristech_only')">
-            Show only what @bristech retweets
+<md-menu-item>
+    <md-button ng-class="{selected : retweet_status === 'bristech_only'}"  ng-click="setRetweetDisplayStatus('bristech_only')">
+        Show only what @bristech retweets
     </md-button>
 </md-menu-item>

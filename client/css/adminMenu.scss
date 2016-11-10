@@ -1,45 +1,55 @@
 .admin-menu-item {
-  height: 100% !important; }
+    height: 100% !important;
+}
 
 .admin-menu-button {
-  letter-spacing: 3px;
-  font-weight: 800; }
+    letter-spacing: 3px;
+    font-weight: 800;
+}
 
 .dropdown-menu-item {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+button.md-button.md-ink-ripple.selected {
+    background-color: #EEEEEE;
+}
+
+button.md-button.md-ink-ripple.unselected {
+    background-color: rgb(255, 255, 255);
 }
 
 .admin-checkbox {
-	margin:0;
+    margin: 0;
 }
 
 .admin-menu {
-  z-index: 4;
+    z-index: 4;
 }
 
 .columns-header {
-	z-index: 3; 
-	display: flex; 
-	flex-direction: row; 
-	justify-content: space-around;
-	overflow-y: scroll;
+    z-index: 3;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    overflow-y: scroll;
 }
 
 .columns-header::-webkit-scrollbar {
-	visibility:hidden;
-} 
+    visibility: hidden;
+}
 
 .column-indicator {
-	border-bottom: 2px solid rgb(255,64,129); 
-	color: white; 
-	margin-left: 12px;
-	margin-right: 12px;
+    border-bottom: 2px solid rgb(255,64,129);
+    color: white;
+    margin-left: 12px;
+    margin-right: 12px;
 }
 
 .column-indicator-writing {
-	margin-left: 15px;
+    margin-left: 15px;
 }
 
 /*# sourceMappingURL=adminMenu.css.map */
