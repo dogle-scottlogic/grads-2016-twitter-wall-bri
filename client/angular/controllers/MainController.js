@@ -62,6 +62,12 @@
             redisplayTweets();
         });
 
+        $rootScope.$on("reload", function(event) {
+            columnAssignmentService.clearStore("admin");
+            columnAssignmentService.clearStore("client");
+            getTweets();
+        });
+
         var vm = this;
 
         $scope.isMobileClient = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -152,6 +158,12 @@
 
         activate();
 
+        function getTweets() {
+            updateTweets(function() {
+                redisplayTweets();
+            });
+        }
+
         function activate() {
             // Set up listeners
             angular.element($window).on("resize", onSizeChanged);
@@ -161,12 +173,7 @@
                 adminViewWatcher();
             });
             // Begin update loop
-            updateTweets(function() {
-                redisplayTweets();
-            });
-            if (!$scope.loggedIn) {
-                updateInteractions();
-            }
+            getTweets();
         }
 
         function showTweetImage(tweet) {
