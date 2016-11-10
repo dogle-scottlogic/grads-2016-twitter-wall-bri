@@ -67,7 +67,7 @@ module.exports = function(client, fs, eventConfigFile, mkdirp) {
 
     function setPinnedStatus(tweetId, pinned) {
         var tweet = getTweet(tweetId);
-        tweet.pinned = true;
+        tweet.pinned = pinned;
         socket.emit(tweet, "update");
     }
 
